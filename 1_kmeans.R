@@ -185,24 +185,24 @@ ggsave(filename = paste0(dir, "/1_week/kmeans_wage_not_logged.png"))
 
 
 
-
-
 # Try fuzzy clustering algorithm
+
 pacman::p_load('e1071')
 data_subset = df %>% 
   select(c(logwage_scaled, educ_scaled)) 
 cm = cmeans(data_subset, 2)
-head(cm$membership)
+
+# Create an index of certainty
 plot_cm = cbind(data_subset, cm$membership) %>% 
   mutate(group = ifelse(`1` > 0.5,1,2)) %>% 
   mutate(Certainty_level = `1`-0.5)
-  # mutate(alpha = ifelse(group == 1, `1`, `2`))
 
 ggplot(data = plot_cm) +
   geom_point(aes(x = educ_scaled, y = logwage_scaled, 
                   color = Certainty_level)) +
   theme_bw()+
   scale_colour_gradient2()
-  
+ggsave(filename = paste0(dir, "/1_week/fuzzy_kmeans.png"))
+
 
 
