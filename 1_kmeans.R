@@ -114,9 +114,25 @@ ggplot(data = c_vals) +
 ggsave(filename = paste0(dir, "/1_week/kmeans_centroids.png"))
 
 
+# Combined centroids + cluster version
+
+ggplot() +
+  geom_point(data = plot_df, aes(x = educ_scaled, y = logwage_scaled, 
+                 col = cluster), alpha = 0.2) +
+  geom_point(data = c_vals %>% 
+               mutate(num_clusters = as.factor(k)), 
+             aes(x = educ_scaled, y = logwage_scaled, 
+                 color = num_clusters), size = 5, shape = 4, 
+             color = "black") +
+  theme_bw() + 
+  facet_wrap(~num_clusters) 
+
+ggsave(filename = paste0(dir, 
+                         "/1_week/kmeans_combined_scatter_and_centroids.png"))
 
 
 
+# extension, not sure if this is useful?
 # Is there any big jumps in model fit with increases in k?
 get_ss_info = function(data, k){
   
