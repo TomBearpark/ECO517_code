@@ -25,6 +25,9 @@ ggplot(data = df_dec_educ) +
   theme_bw() +
   ggtitle("Conditional Mean of Logwage by Decile of Education")
 
+ggsave(filename = paste0(dir, "/2_week/cond_mean_logwage_by_educ.png"))
+
+
 # 2 Conditional Mean of logwage by decile of Education
 
 df_dec_logwage = df_deciles %>% 
@@ -36,6 +39,7 @@ ggplot(data = df_dec_logwage) +
   theme_bw() +
   ggtitle("Conditional Mean of Education by Decile of Logwage")
 
+ggsave(filename = paste0(dir, "/2_week/cond_mean_educ_by_logwage.png"))
 
 
 
@@ -45,32 +49,32 @@ ggplot(data = df_dec_logwage) +
 # Version 2 - Using Regression to get SE
 # This is probably not useful and should be deleted
 
-get_df_by_educ = function(decile){
-  
-  d = df_deciles %>% 
-    filter(decile_educ == !!decile)
-  
-  m = lm(logwage ~ decile_educ, data = d)
-  val = coef(summary(m))[, "Estimate"] 
-  se = coef(summary(m))[, "Std. Error"] 
-
-  df = data.frame(decile = decile, val = val, se = se)
-  return(df)
-
-}
-
-x_df_decile_educ = lapply(seq(1,10), get_df) %>% 
-  bind_rows() %>% 
-  mutate(max = val + 1.96 * se, 
-         min = val - 1.96 * se)
-
-ggplot(data = x_df_decile_educ) +
-  geom_point(stat="identity", color="black", position=position_dodge(.9), 
-           aes(x = decile, y = val)) +
-  geom_errorbar(aes(x = decile, ymin=min, ymax=max), width=.2,
-             position=position_dodge(.9)) +
-  theme_bw()
-
+# get_df_by_educ = function(decile){
+#   
+#   d = df_deciles %>% 
+#     filter(decile_educ == !!decile)
+#   
+#   m = lm(logwage ~ decile_educ, data = d)
+#   val = coef(summary(m))[, "Estimate"] 
+#   se = coef(summary(m))[, "Std. Error"] 
+# 
+#   df = data.frame(decile = decile, val = val, se = se)
+#   return(df)
+# 
+# }
+# 
+# x_df_decile_educ = lapply(seq(1,10), get_df) %>% 
+#   bind_rows() %>% 
+#   mutate(max = val + 1.96 * se, 
+#          min = val - 1.96 * se)
+# 
+# ggplot(data = x_df_decile_educ) +
+#   geom_point(stat="identity", color="black", position=position_dodge(.9), 
+#            aes(x = decile, y = val)) +
+#   geom_errorbar(aes(x = decile, ymin=min, ymax=max), width=.2,
+#              position=position_dodge(.9)) +
+#   theme_bw()
+# 
 
 
 
