@@ -45,6 +45,43 @@ ggplot() +
 ggsave(filename = paste0(dir, "/2_week/admissability.png"), 
        height = 5, width = 10)
 
+# Get vector of probabilities 
+alpha = seq(0,1,0.001)
+
+get_eU = function(index){
+  eU = data.frame(
+    eU = utility$rain[index] * alpha + utility$sun[index] * (1-alpha), 
+    umbrella =  utility$umbrella[index], 
+    alpha = alpha)
+  return(eU)
+}
+
+df_eU = 
+  lapply(
+    seq(1, length(utility$umbrella)), 
+    get_eU
+  ) %>% 
+  bind_rows()
+
+ggplot(data = df_eU %>% filter(umbrella != "E")) +
+  geom_line(aes(x = alpha, y = eU, color = umbrella)) +
+  xlab("Probability of Rain") + ylab("Expected Utility")
+ggsave(filename = paste0(dir, "/2_week/expected_utility.png"))
+
+
+df_max = df_eU %>% 
+  filter(umbrella != "E") %>% 
+  group_by(alpha) %>% 
+  summarise(max = max(eU))
+
+ggplot(data = df_eU%>% filter(umbrella != "E")) +
+  geom_line(aes(x = alpha, y = eU, color = umbrella), alpha = 0.3) +
+  xlab("Probability of Rain") + ylab("Expected Utility") +
+  geom_line(data = df_max, aes(x = alpha, y = max), color = "red")
+
+ggsave(filename = paste0(dir, "/2_week/expected_utility_w_max.png"))
+
+
 ######################################
 # Question 2
 
