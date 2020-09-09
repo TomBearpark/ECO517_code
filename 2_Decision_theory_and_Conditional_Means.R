@@ -24,6 +24,48 @@ utility = data.frame(
   sun = c(1,2,2.6, 3,3,4,6)
 )
 
+# 1.1 Plot Expected Utility for each option as a function of the probability of rain
+
+# Get vector of probabilities 
+alpha = seq(0,1,0.001)
+
+# Function for returning expected utility of each option as a function of alpha
+get_eU = function(index){
+  eU = data.frame(
+    eU = utility$rain[index] * alpha + utility$sun[index] * (1-alpha), 
+    umbrella =  utility$umbrella[index], 
+    alpha = alpha)
+  return(eU)
+}
+
+# Get data frame of expected utilites for plotting
+df_eU = 
+  lapply(
+    seq(1, length(utility$umbrella)), 
+    get_eU
+  ) %>% 
+  bind_rows()
+
+# Plot, filtering out E since it's dominated
+ggplot(data = df_eU %>% filter(umbrella != "E")) +
+  geom_line(aes(x = alpha, y = eU, color = umbrella)) +
+  xlab("Probability of Rain") + ylab("Expected Utility")
+ggsave(filename = paste0(dir, "/2_week/expected_utility.png"))
+
+# Identify the option that maximises expected utility at each level of alpha
+df_max = df_eU %>% 
+  filter(umbrella != "E") %>% 
+  group_by(alpha) %>% 
+  summarise(max = max(eU))
+
+# Overlay the max expected utility onto previous plot
+ggplot(data = df_eU%>% filter(umbrella != "E")) +
+  geom_line(aes(x = alpha, y = eU, color = umbrella), alpha = 0.3) +
+  xlab("Probability of Rain") + ylab("Expected Utility") +
+  geom_line(data = df_max, aes(x = alpha, y = max), color = "red")
+ggsave(filename = paste0(dir, "/2_week/expected_utility_w_max.png"))
+
+# 1.2: Plot utility space, and convex hull of utility possibilities
 # get coordinates for convex hull
 con.hull.pos=chull(utility[c(2,3)])
 con.hull <- rbind(utility[con.hull.pos,],utility[con.hull.pos[1],]) 
@@ -41,46 +83,8 @@ ggplot() +
   ylab("Utility if it is sunny") +
   theme(legend.title=element_blank()) + 
   geom_text_repel(data = utility, aes(x = rain, y = sun, label = umbrella))
-
 ggsave(filename = paste0(dir, "/2_week/admissability.png"), 
        height = 5, width = 10)
-
-# Get vector of probabilities 
-alpha = seq(0,1,0.001)
-
-get_eU = function(index){
-  eU = data.frame(
-    eU = utility$rain[index] * alpha + utility$sun[index] * (1-alpha), 
-    umbrella =  utility$umbrella[index], 
-    alpha = alpha)
-  return(eU)
-}
-
-df_eU = 
-  lapply(
-    seq(1, length(utility$umbrella)), 
-    get_eU
-  ) %>% 
-  bind_rows()
-
-ggplot(data = df_eU %>% filter(umbrella != "E")) +
-  geom_line(aes(x = alpha, y = eU, color = umbrella)) +
-  xlab("Probability of Rain") + ylab("Expected Utility")
-ggsave(filename = paste0(dir, "/2_week/expected_utility.png"))
-
-
-df_max = df_eU %>% 
-  filter(umbrella != "E") %>% 
-  group_by(alpha) %>% 
-  summarise(max = max(eU))
-
-ggplot(data = df_eU%>% filter(umbrella != "E")) +
-  geom_line(aes(x = alpha, y = eU, color = umbrella), alpha = 0.3) +
-  xlab("Probability of Rain") + ylab("Expected Utility") +
-  geom_line(data = df_max, aes(x = alpha, y = max), color = "red")
-
-ggsave(filename = paste0(dir, "/2_week/expected_utility_w_max.png"))
-
 
 ######################################
 # Question 2
@@ -94,7 +98,7 @@ df_deciles = df %>%
   mutate(decile_logwage = ntile(logwage, 10), 
          decile_educ = ntile(educ, 10)) 
 
-# 1 Conditional Mean of logwage by Decile of Education
+# 2.1 Conditional Mean of logwage by Decile of Education
 
 df_dec_educ = df_deciles %>% 
   group_by(decile_educ) %>% 
@@ -107,7 +111,7 @@ p = ggplot(data = df_dec_educ) +
 
 ggsave(p, filename = paste0(dir, "/2_week/cond_mean_logwage_by_educ.png"))
 
-# 2 Conditional Mean of logwage by decile of Education
+# 2.2 Conditional Mean of logwage by decile of Education
 
 df_dec_logwage = df_deciles %>% 
   group_by(decile_logwage) %>% 
@@ -120,8 +124,7 @@ q = ggplot(data = df_dec_logwage) +
 
 ggsave(q, filename = paste0(dir, "/2_week/cond_mean_educ_by_logwage.png"))
 
-# Further exploration... Let's add spreads to the plots 
-
+# 2.3 Further exploration... Let's add spreads to the plots 
 df_plot_educ = 
   df_deciles %>% 
     left_join(df_dec_educ, by = "decile_educ") %>% 
