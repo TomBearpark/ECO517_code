@@ -1,6 +1,6 @@
-# Note: to run this if you aren't Tom, change the "dir" string to the location
-# of the input data on your machine, and make sure you have 
+# Note: to run this  make sure you have 
 # dplyr and ggplot2 libraries
+
 # The fuzzy kmeans analysis at the end also requires the "e1071" library
 # I use dplyr and ggplot2 rather than the base R version provided by the professor
 # due to improved plot aesthetics
@@ -14,8 +14,12 @@
 # 2.4 Extensions: Fuzzy kmeans and sum of squares as function of K
 
 rm(list = ls())
+load(
+  url("http://sims.princeton.edu/yftp/emet1_2020/kmeans/akdata.RData")
+)
+
+# Output root location
 dir = '/Users/tombearpark/Documents/princeton/1st_year/ECO517/exercises/'
-load(paste0(dir, "data/asciiqob.rdata"))
 
 ########################################
 # Version 1 

@@ -1,7 +1,6 @@
 ## Code for plots used in Exercise 2, ECO517 Course at Princeton
 
-# Note - to run this code if you are not Tom, change the 'dir' string to the 
-# location of the AK data on your machine, and make sure you have the 
+# Note - to run this code if you are not Tom, make sure you have the 
 # dplyr, ggplot2, patchwork, and ggrepel packages installed.
 
 # Load environment. 
@@ -12,6 +11,8 @@ library(patchwork) # Combining ggplot objects
 library(ggrepel) # Making text on scatter plots nicely spaced
 
 theme_set(theme_bw())
+
+# Output root location
 dir = '/Users/tombearpark/Documents/princeton/1st_year/ECO517/exercises/'
 
 ######################################
@@ -90,7 +91,9 @@ ggsave(filename = paste0(dir, "/2_week/admissability.png"),
 # Question 2
 
 # Load in the data, subset to the variables we want
-load(paste0(dir, "data/asciiqob.rdata"))
+load(
+  url("http://sims.princeton.edu/yftp/emet1_2020/kmeans/akdata.RData")
+)
 df <- akdataf[ , 1:2]
 
 # Take deciles of each variable
