@@ -1,33 +1,34 @@
-## Code for plots used in Exercise 2, ECO517 Course at Princeton
+## Code for plots used in Exercise 3, ECO517 Course at Princeton
 
 # Note - to run this code if you are not Tom, make sure you have the 
-# dplyr, ggplot2
+# dplyr, ggplot2, patchwork libraries loaded
+
+# contents:
+# 2.1 - Initial data cleaning and variable construction
+# 2.2 - Plotting the proportions, visualisations
+# 2.3 - Draws from dirichlets, using normalised versions of the alpha
+      # values calculated in 2.1
 
 # Load environment. 
 rm(list = ls())
 library(dplyr) # Data manipulation
 library(ggplot2) # Plotting
-library(patchwork)
-
+library(patchwork) # Combining ggplot objects
 theme_set(theme_bw())
 
 # Output root location
 dir = '/Users/tombearpark/Documents/princeton/1st_year/ECO517/exercises/'
-
-# Load in the data, subset to the variables we want
+# Load in the data
 load(url("http://sims.princeton.edu/yftp/emet1_2020/kmeans/akdata.RData"))
-
-######################################
-# Question 1 - Maths
+df = akdataf 
 
 ######################################
 # Question 2
 
-# Create a variable for cohort
-df = akdataf %>%
-  mutate(cohort = 0)
+# 2.1 Initial data cleaning / variable construction
 
-# Generate cohort identifier
+# Create a variable for cohort, identifying each two year group. Include both a 
+# numerical version (for analysis) and a categorical one (for plotting)
 for (i in seq(min(akdataf$yob), max(akdataf$yob), 2)){
   list = c(i, i+1)
   df$cohort[df$yob %in% list] <- i
@@ -40,42 +41,27 @@ zero_educ = df %>%
   group_by(cohort, cohort_tag) %>% 
   summarise(num_zeros = sum(zero))
 
+# Join information on zero education, with number of people in each cohort
+zero_educ_Prob = left_join(
+  zero_educ, df %>% group_by(cohort) %>% tally(), 
+  by = "cohort") 
+
+# Get total number of people in the sample
+total_n = sum(zero_educ_Prob$n)
+
+# Calculate proportions
+zero_educ_Prob = zero_educ_Prob%>% 
+  mutate(num_zeros_cohort_proportion = num_zeros / n, 
+         num_zeros_population_proportion = num_zeros / total_n)
+
+# 2.2 PLotting
+
 # Plot this, to visualise the drift
 ggplot(data = zero_educ) +
   geom_point(aes(x = cohort_tag, y = num_zeros)) +
   ylab("No. People with Education = 0") + xlab("Cohort")
 ggsave(paste0(dir, 
               '/3_week/scatter_visual_zeroeduc_by_cohort.png'))
-
-# Want to find the posterior probability that the population proportion of 
-# people who have zero years of schooling declines in each cohort. 
-
-
-# "To compute this, draw a sample of, say, 1000 draws from the posterior 
-# distribution of the relevant population proportions,
-# and count what fraction of them satisfy the condition."
-
-# 2.1 - Most simple approach
-
-# "The most straightforward approach is to use the fact that the population 
-# probabilities of the 5 cohort/zero education bins, 
-# normalized to sum to one across cohorts, are jointly 5-dimensional Dirichlet. 
-# Then it’s just a matter of drawing a large number of 5-dimensional
-# vectors and seeing how many of them satisfy all(diff(p) < 0)"
-
-# We already got the number of zero education people in each cohort. 
-# Use this and the number of people in each bin to get a df for proportions with
-# zero eduction in each bin
-
-# Get total 
-total_n = sum(zero_educ_Prob$n)
-
-zero_educ_Prob = left_join(
-  zero_educ, df %>% group_by(cohort) %>% tally(), 
-  by = "cohort") %>% 
-  mutate(num_zeros_cohort_proportion = num_zeros / n, 
-         num_zeros_population_proportion = num_zeros / total_n)
-
 
 # Plot the zeros as a proportion of the cohort size, and as proportion of the total 
 # population
@@ -91,7 +77,7 @@ r = q + p
 ggsave(r, file = paste0(dir, 
               '/3_week/scatter_visual_percent_zeroeduc_by_cohort.png'))
 
-# Dirichlet Time!
+# 2.3 - Dirichlet Time!
 
 # Function for returning a dataframe, where each row is a draw 
 # Return n draws. Input parameters are alpha
@@ -131,7 +117,6 @@ rdirichlet_tom <- function(n, alpha) {
 norm_population = sum(zero_educ_Prob$num_zeros_population_proportion)
 norm_cohort = sum(zero_educ_Prob$num_zeros_cohort_proportion)
 
-
 zero_educ_prob_norm = zero_educ_Prob %>% 
   mutate(num_zeros_pop_norm = num_zeros_population_proportion / norm_population, 
          num_zeros_cohort_norm = num_zeros_cohort_proportion/ norm_cohort)
@@ -152,7 +137,4 @@ print(p1)
 
 # dataframe of alpha values for copying into latex:
 zero_educ_prob_norm[c("cohort_tag", "num_zeros_pop_norm", "num_zeros_cohort_norm")]
-
-
-
 
