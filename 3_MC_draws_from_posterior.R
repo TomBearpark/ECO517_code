@@ -123,17 +123,32 @@ zero_educ_prob_norm = zero_educ_Prob %>%
 
 
 # Take a thousand draws
+
+# As proportion of population
 vals = rdirichlet_tom(n = 1000, 
                       alpha = as.vector(zero_educ_prob_norm$num_zeros_pop_norm))
 
 p=length(vals$decreasing[vals$decreasing == 1]) / 1000
 print(p)
 
+# As proportion of cohort
 vals1 = rdirichlet_tom(n = 1000, 
                       alpha = as.vector(zero_educ_prob_norm$num_zeros_cohort_norm))
 
-p1=length(vals$decreasing[vals$decreasing == 1]) / 1000
+p1=length(vals1$decreasing[vals1$decreasing == 1]) / 1000
 print(p1)
+
+
+# Fake data - check we get a high number with some extreme parameters
+test = c(0.99,0.50,0.25,0.03,0.001)
+test = test / sum(test)
+test
+vals2 = rdirichlet_tom(n = 1000, 
+                       alpha = test)
+p2=length(vals2$decreasing[vals2$decreasing == 1]) / 1000
+print(p2)
+
+
 
 # dataframe of alpha values for copying into latex:
 zero_educ_prob_norm[c("cohort_tag", "num_zeros_pop_norm", "num_zeros_cohort_norm")]
