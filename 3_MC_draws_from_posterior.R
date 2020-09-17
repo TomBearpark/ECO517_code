@@ -4,10 +4,15 @@
 # dplyr, ggplot2, patchwork libraries loaded
 
 # contents:
+# Question 2
 # 2.1 - Initial data cleaning and variable construction
 # 2.2 - Plotting the proportions, visualisations
 # 2.3 - Draws from dirichlets, using normalised versions of the alpha
       # values calculated in 2.1
+# Question 1
+# This is a simulation to help with intuition for question 1
+  # Its after question 2 in the code because it uses  a function developed 
+  # as part of question 2
 
 # Load environment. 
 rm(list = ls())
@@ -138,7 +143,6 @@ vals1 = rdirichlet_tom(n = 1000,
 p1=length(vals1$decreasing[vals1$decreasing == 1]) / 1000
 print(p1)
 
-
 # Fake data - check we get a high number with some extreme parameters
 test = c(0.99,0.50,0.25,0.03,0.001)
 test = test / sum(test)
@@ -149,7 +153,44 @@ p2=length(vals2$decreasing[vals2$decreasing == 1]) / 1000
 print(p2)
 
 
-
 # dataframe of alpha values for copying into latex:
 zero_educ_prob_norm[c("cohort_tag", "num_zeros_pop_norm", "num_zeros_cohort_norm")]
 
+
+
+######################################
+# Question 1
+# Simulate to get intuition described in question 
+
+# Set parameter vector
+a1 = 2
+a2 = 3
+a3 = 4
+
+# Draw from 3D dirichlet
+alpha1 = c(a1,a2,a3)
+vals1 = rdirichlet_tom(n = 10000, alpha = alpha1) %>% 
+  mutate(p1_norm =D1 / (D1+D2), 
+         p2_norm = D2 / (D1+D2))
+
+# Draw from associated 2D, using transformation from the pset
+alpha2 = c(a1, a2)
+vals2 = rdirichlet_tom(n = 10000, alpha = alpha2)
+
+# Clean up and put in a dataframe for plotting 
+df = as.data.frame(c(
+  vals1 %>% select(c("p1_norm", "p2_norm")), 
+  vals2 %>% select(c("D1", "D2"))
+))
+
+# Compare outputs
+p = ggplot(data = df) +
+  geom_density2d_filled(aes(x = p1_norm, y = p2_norm)) +
+  ggtitle("Joint Density of Marginal from 3D Dirichlet") 
+q = ggplot(data = df) +
+  geom_density2d_filled(aes(x = D1, y = D2)) +
+  ggtitle("Join Density of 2D Dirichlet")
+
+p+q
+ggsave(p+q, file = paste0(dir, 
+                          '/3_week/simulated_dirichlet_Q1.png'))
