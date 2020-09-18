@@ -1,14 +1,14 @@
 ## Code for plots used in Exercise 3, ECO517 Course at Princeton
 
 # Note - to run this code if you are not Tom, make sure you have the 
-# dplyr, ggplot2, patchwork libraries loaded
+# dplyr, ggplot2, patchwork libraries loaded and up to date
 
 # contents:
 # Question 2
 # 2.1 - Initial data cleaning and variable construction
 # 2.2 - Plotting the proportions, visualisations
-# 2.3 - Draws from dirichlets, using normalised versions of the alpha
-      # values calculated in 2.1
+# 2.3 - Draws from dirichlets, using three different specifications described in 
+    # the question
 
 # Question 1
 # This is a simulation to help with intuition for question 1
@@ -22,6 +22,8 @@ library(ggplot2) # Plotting
 library(patchwork) # Combining ggplot objects
 theme_set(theme_bw())
 
+# Forcing the version of dplyr, since we use the across function from a recent
+# release
 if(packageVersion("dplyr") != "1.0.2"){
   install.packages("dplyr", version = "1.0.2", 
                   repos = "http://cran.us.r-project.org")
@@ -120,12 +122,13 @@ length(method_1_df$decreasing[method_1_df$decreasing == 1]) / 1000
 zero_educ = zero_educ %>% 
   mutate(num_educated = n - num_zeros)
 
+# Quick plot - to show trend over time
 s = ggplot(data = zero_educ) + 
   geom_point(aes(x = cohort_tag, y = n)) + 
   ggtitle("Size of cohorts") +   
   ylab("No. People in Cohort") + xlab("Cohort")
 ggsave(s, file = paste0(dir, 
-              '/3_week/cohort_size_over_time.png'))
+              '/3_week/cohort_size_over_time.png'),height = 5, width = 5)
 
 # Draw bins for the educated 
 method_2_df = rdirichlet_tom(n = 1000, 
