@@ -74,7 +74,7 @@ q = ggplot(data = zero_educ) +
   geom_point(aes(x = cohort_tag, y = num_zeros_prop_cohort)) +
   ylab("Proportion of the Cohort with Education = 0") + xlab("Cohort")
 
-r = q + p
+r =  p + q
 ggsave(r, file = paste0(dir, 
               '/3_week/scatter_visual_percent_zeroeduc_by_cohort.png'))
 
@@ -191,13 +191,13 @@ df = as.data.frame(c(
 ))
 
 # Compare outputs
-p = ggplot(data = df) +
+p1 = ggplot(data = df) +
   geom_density2d_filled(aes(x = p1_norm, y = p2_norm)) +
   ggtitle("Joint Density of Marginal from 3D Dirichlet") 
-q = ggplot(data = df) +
+q1 = ggplot(data = df) +
   geom_density2d_filled(aes(x = D1, y = D2)) +
   ggtitle("Join Density of 2D Dirichlet")
 
-p+q
-ggsave(p+q, file = paste0(dir, 
+p1+q1
+ggsave(p1+q1, file = paste0(dir, 
                           '/3_week/simulated_dirichlet_Q1.png'))
