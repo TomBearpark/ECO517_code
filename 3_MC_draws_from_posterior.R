@@ -9,6 +9,7 @@
 # 2.2 - Plotting the proportions, visualisations
 # 2.3 - Draws from dirichlets, using normalised versions of the alpha
       # values calculated in 2.1
+
 # Question 1
 # This is a simulation to help with intuition for question 1
   # Its after question 2 in the code because it uses  a function developed 
@@ -52,36 +53,24 @@ zero_educ = df %>%
   summarise(num_zeros = sum(zero))
 
 # Join information on zero education, with number of people in each cohort
-zero_educ_Prob = left_join(
+zero_educ = left_join(
   zero_educ, df %>% group_by(cohort) %>% tally(), 
-  by = "cohort") 
-
-# Get total number of people in the sample
-total_n = sum(zero_educ_Prob$n)
-
-# Calculate proportions
-zero_educ_Prob = zero_educ_Prob%>% 
-  mutate(num_zeros_cohort_proportion = num_zeros / n, 
-         num_zeros_population_proportion = num_zeros / total_n)
+  by = "cohort") %>% 
+  mutate(num_zeros_prop_cohort = num_zeros / n)
 
 # 2.2 PLotting
 
-# Plot this, to visualise the drift
-ggplot(data = zero_educ) +
+# Plot the zeros as a proportion of the cohort size, and as proportion of the total 
+# population
+p = ggplot(data = zero_educ) +
   geom_point(aes(x = cohort_tag, y = num_zeros)) +
   ylab("No. People with Education = 0") + xlab("Cohort")
 ggsave(paste0(dir, 
               '/3_week/scatter_visual_zeroeduc_by_cohort.png'))
 
-# Plot the zeros as a proportion of the cohort size, and as proportion of the total 
-# population
-p = ggplot(data = zero_educ_Prob) +
-  geom_point(aes(x = cohort_tag, y = num_zeros_cohort_proportion)) +
-  ylab("Proportion of Cohort with Education = 0") + xlab("Cohort")
-
-q = ggplot(data = zero_educ_Prob) +
-  geom_point(aes(x = cohort_tag, y = num_zeros_population_proportion)) +
-  ylab("Proportion of the Sample with Education = 0") + xlab("Cohort")
+q = ggplot(data = zero_educ) +
+  geom_point(aes(x = cohort_tag, y = num_zeros_prop_cohort)) +
+  ylab("Proportion of the Cohort with Education = 0") + xlab("Cohort")
 
 r = q + p
 ggsave(r, file = paste0(dir, 
@@ -111,39 +100,68 @@ rdirichlet_tom <- function(n, alpha) {
   for (n in names){
     outmat[n] = outmat[n] / outmat$norm
   }
-  if(m == 5){
-    outmat = outmat %>% 
-      mutate( 
-        decreasing= ifelse(
-          (D1 > D2) & (D2 > D3) & (D3 > D4) & (D4 > D5), 1, 0 ))
-  }else{
-    print("Drift checked functionality only implemented for five cohorts")
-  }
-  
+  outmat = select(outmat, -norm)
   return(outmat)
 }
 
 # Method 1
-# As proportion of population
-vals = rdirichlet_tom(n = 1000, 
-        alpha = as.vector(zero_educ_Prob$num_zeros_cohort_proportion))
+# Each bin is a count
+method_1_df = rdirichlet_tom(n = 1000, 
+        alpha = as.vector(zero_educ$num_zeros)) %>% 
+  mutate( 
+    decreasing= ifelse(
+      (D1 > D2) & (D2 > D3) & (D3 > D4) & (D4 > D5), 1, 0 ))
 
-p=length(vals$decreasing[vals$decreasing == 1]) / 1000
-print(p)
+length(method_1_df$decreasing[method_1_df$decreasing == 1]) / 1000
+
+
+# Method 2
+# Account for the fact that cohorts are changing over time
+zero_educ = zero_educ %>% 
+  mutate(num_educated = n - num_zeros)
+
+s = ggplot(data = zero_educ) + 
+  geom_point(aes(x = cohort_tag, y = n)) + 
+  ggtitle("Size of cohorts") +   
+  ylab("No. People in Cohort") + xlab("Cohort")
+ggsave(s, file = paste0(dir, 
+              '/3_week/cohort_size_over_time.png'))
+
+# Draw bins for the educated 
+method_2_df = rdirichlet_tom(n = 1000, 
+                      alpha = as.vector(zero_educ$num_educated))
+names(method_2_df) = paste0(names(method_2_df), "_educated")
+
+# join to info
+method_2_df = bind_cols(method_2_df, select(method_1_df, -decreasing))
+# Calculate ratios of non-educted to educated for each bin
+for (i in 1:5){
+  method_2_df[paste0("ratio_c_", i)] = 
+    method_2_df[paste0("D", i)] / method_2_df[paste0("D", i, "_educated")]
+}
+method_2_df = method_2_df %>% 
+  mutate( 
+    decreasing= ifelse(
+      (ratio_c_1 > ratio_c_2) & (ratio_c_2 > ratio_c_3) & 
+        (ratio_c_3 > ratio_c_4) & (ratio_c_4 > ratio_c_5), 1, 0 ))
+
+length(method_2_df$decreasing[method_2_df$decreasing == 1]) / 1000
+
 
 # Method 3.
-# As proportion of cohort
-vals1 = rdirichlet_tom(n = 1000000, 
-        alpha = as.vector(zero_educ_Prob$num_zeros_cohort_proportion))
+# Treat cohort size as fixed. Scale the educ ==0 probabilities by cohort size
+method_3_df = select(method_1_df, -decreasing)
 
-p1=length(vals1$decreasing[vals1$decreasing == 1]) / 1000000
-print(p1)
+for (i in 1:5){
+  method_3_df[paste0("D",i)] =  method_3_df[paste0("D",i)] / zero_educ$n[i]
+}
+method_3_df = method_3_df %>% 
+  mutate( 
+    decreasing= ifelse(
+      (D1 > D2) & (D2 > D3) & (D3 > D4) & (D4 > D5), 1, 0 ))
 
-# dataframe of alpha values for copying into latex:
-zero_educ_prob_norm[c("cohort_tag", "num_zeros_pop_norm", "num_zeros_cohort_norm")]
-
-
-
+length(method_3_df$decreasing[method_3_df$decreasing == 1]) / 1000
+ 
 ######################################
 # Question 1
 # Simulate to get intuition described in question 
