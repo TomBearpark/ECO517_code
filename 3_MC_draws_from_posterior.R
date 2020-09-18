@@ -21,6 +21,11 @@ library(ggplot2) # Plotting
 library(patchwork) # Combining ggplot objects
 theme_set(theme_bw())
 
+if(packageVersion("dplyr") != "1.0.2"){
+  install.packages("dplyr", version = "1.0.2", 
+                  repos = "http://cran.us.r-project.org")
+}
+
 # Output root location
 dir = '/Users/tombearpark/Documents/princeton/1st_year/ECO517/exercises/'
 # Load in the data
@@ -118,40 +123,21 @@ rdirichlet_tom <- function(n, alpha) {
   return(outmat)
 }
 
-# Normalise the alpha vectors, so they sum to one
-norm_population = sum(zero_educ_Prob$num_zeros_population_proportion)
-norm_cohort = sum(zero_educ_Prob$num_zeros_cohort_proportion)
-
-zero_educ_prob_norm = zero_educ_Prob %>% 
-  mutate(num_zeros_pop_norm = num_zeros_population_proportion / norm_population, 
-         num_zeros_cohort_norm = num_zeros_cohort_proportion/ norm_cohort)
-
-
-# Take a thousand draws
-
+# Method 1
 # As proportion of population
 vals = rdirichlet_tom(n = 1000, 
-                      alpha = as.vector(zero_educ_prob_norm$num_zeros_pop_norm))
+        alpha = as.vector(zero_educ_Prob$num_zeros_cohort_proportion))
 
 p=length(vals$decreasing[vals$decreasing == 1]) / 1000
 print(p)
 
+# Method 3.
 # As proportion of cohort
-vals1 = rdirichlet_tom(n = 1000, 
-                      alpha = as.vector(zero_educ_prob_norm$num_zeros_cohort_norm))
+vals1 = rdirichlet_tom(n = 1000000, 
+        alpha = as.vector(zero_educ_Prob$num_zeros_cohort_proportion))
 
-p1=length(vals1$decreasing[vals1$decreasing == 1]) / 1000
+p1=length(vals1$decreasing[vals1$decreasing == 1]) / 1000000
 print(p1)
-
-# Fake data - check we get a high number with some extreme parameters
-test = c(0.99,0.50,0.25,0.03,0.001)
-test = test / sum(test)
-test
-vals2 = rdirichlet_tom(n = 1000, 
-                       alpha = test)
-p2=length(vals2$decreasing[vals2$decreasing == 1]) / 1000
-print(p2)
-
 
 # dataframe of alpha values for copying into latex:
 zero_educ_prob_norm[c("cohort_tag", "num_zeros_pop_norm", "num_zeros_cohort_norm")]
