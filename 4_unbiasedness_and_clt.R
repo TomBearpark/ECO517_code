@@ -146,20 +146,20 @@ mnorm <- vector("numeric", ndraw)
 mhat <- mnorm
 
 ## we need a rough value of mmax to scale the log likelihood when exponentiating.
-mmax <- max(lmpdf(seq(-.5, 1.5, length=300), mmean[1], sqrt(msigsq[1]), N))
+mmax <- max(lmpdf(seq(-.5, 1.5, length=300), mmean[1], sqrt(mmsigsq[1]), N))
 
 ## Compute the scale factor of the likelihood in each sample that makes it
 ## integrate to one.
 ## This range of integration works for N=20. Might need adjustment for other N's.
 for (id in 1:ndraw){
     mnorm[id] <- integrate(function(mu)exp(lmpdf(mu, mmean[id], 
-        sqrt(msigsq[id]), N)-mmax), lower=.5, upper=1.5)$value
+        sqrt(mmsigsq[id]), N)-mmax), lower=.5, upper=1.5)$value
 } 
 
 # Find the posterior means
 for (id in 1:30) {
     mhat[id] <- integrate(function(mu) mu * exp(lmpdf(mu, mmean[id], 
-       sqrt(msigsq[id]),N)-mmax), lower=.5, upper=1.5)$value/mnorm[id]
+       sqrt(mmsigsq[id]),N)-mmax), lower=.5, upper=1.5)$value/mnorm[id]
 }
 
 ## mhat should be the posterior means.
