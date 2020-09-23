@@ -114,11 +114,12 @@ r = plot_means(n_samples = 1000,size_sample = 3000) +
         plot_means(n_samples = 100000,size_sample = 3000) 
 ggsave(r, file= paste0(dir, "/means_of_many_size_3000_samples_histogram.png"))
 
-ggsave(p/q/r, file= paste0(dir, "/means_of_many_samples_histogram.png"))
+ggsave(p/q/r, file = paste0(dir, "/means_of_many_samples_histogram.png"))
 
 
 ##################################
 # Question 2
+set.seed(1)
 
 # Consider model where iid data drawn from normal N(mu, mu^2)
 
@@ -157,7 +158,7 @@ for (id in 1:ndraw){
 } 
 
 # Find the posterior means
-for (id in 1:30) {
+for (id in 1:ndraw) {
     mhat[id] <- integrate(function(mu) mu * exp(lmpdf(mu, mmean[id], 
        sqrt(mmsigsq[id]),N)-mmax), lower=.5, upper=1.5)$value/mnorm[id]
 }
@@ -165,4 +166,40 @@ for (id in 1:30) {
 ## mhat should be the posterior means.
 ## mmean should be the unbiased sample means
 
+# Question 2 a)
+mean(mmean)
+mean(mhat)
+
+1 - mean(mmean)
+1 - mean(mhat)
+
+means_df = bind_rows(
+    as.data.frame(mmean) %>%  mutate(mean_type = "sample_means")  %>% rename(value = mmean), 
+    as.data.frame(mhat) %>% mutate(mean_type = "posterior")%>% rename(value = mhat) 
+)
+
+ggplot(data = means_df) +
+    geom_density(aes(x = value, color = mean_type))
+
+ggsave(file = paste0(dir, "/means_density_functions.png"), width = 5, height = 5)
+ 
+# Question 2 b)
+means_df %>% 
+    mutate(diff = value - 1) %>% 
+    mutate(square_error = diff ^2) %>% 
+    group_by(mean_type) %>% 
+    summarize(RMSE = sqrt(mean(square_error)))
+
+# Question 2 c)
+# calculate the average of sample mean and sample sd...
+mavg = 0.5*(mmean + sqrt(mmsigsq))
+
+mean(mavg)
+ggplot(data = data.frame(mavg)) +
+    geom_density(aes(x = mavg))
+
+data.frame(mavg) %>% 
+    mutate(diff = mavg - 1) %>% 
+    mutate(square_error = diff ^2) %>%
+    summarize(RMSE = sqrt(mean(square_error)))
 
