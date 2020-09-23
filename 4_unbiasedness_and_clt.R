@@ -184,11 +184,11 @@ ggplot(data = means_df) +
 ggsave(file = paste0(dir, "/means_density_functions.png"), width = 5, height = 5)
  
 # Question 2 b)
-means_df %>% 
+RMSE_means = means_df %>% 
     mutate(diff = value - 1) %>% 
     mutate(square_error = diff ^2) %>% 
     group_by(mean_type) %>% 
-    summarize(RMSE = sqrt(mean(square_error)))
+    summarize(RMSE = sqrt(mean(square_error))) 
 
 # Question 2 c)
 # calculate the average of sample mean and sample sd...
@@ -198,8 +198,25 @@ mean(mavg)
 ggplot(data = data.frame(mavg)) +
     geom_density(aes(x = mavg))
 
-data.frame(mavg) %>% 
+rmse_mavg = data.frame(mavg) %>% 
     mutate(diff = mavg - 1) %>% 
     mutate(square_error = diff ^2) %>%
-    summarize(RMSE = sqrt(mean(square_error)))
+    summarize(RMSE = sqrt(mean(square_error))) %>% as.numeric()
 
+# Final dataframe of results, for sticking in the overleaf
+data.frame(
+    estimator = c(
+        "Frequentist", 
+        "Posterior", 
+        "Improved Frequentist"
+    ), 
+    bias = c(
+        1 - mean(mmean),
+        1 - mean(mhat),
+        1 - mean(mavg)
+    ), 
+    RMSE = c(
+        rev(RMSE_means$RMSE), 
+        rmse_mavg
+    )
+)
