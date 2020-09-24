@@ -129,18 +129,19 @@ s = ggplot(data = zero_educ) +
   ylab("No. People in Cohort") + xlab("Cohort")
 ggsave(s, file = paste0(dir, 
               '/3_week/cohort_size_over_time.png'),height = 5, width = 5)
+s
+# Draw bins for the educated and non-educated jointly 
+all = c(zero_educ$num_educated, zero_educ$num_zeros)
 
-# Draw bins for the educated 
+# 
 method_2_df = rdirichlet_tom(n = 1000, 
-                      alpha = as.vector(zero_educ$num_educated))
-names(method_2_df) = paste0(names(method_2_df), "_educated")
+                      alpha = all)
 
-# join to info
-method_2_df = bind_cols(method_2_df, select(method_1_df, -decreasing))
 # Calculate ratios of non-educted to educated for each bin
 for (i in 1:5){
+  j = i + 5
   method_2_df[paste0("ratio_c_", i)] = 
-    method_2_df[paste0("D", i)] / method_2_df[paste0("D", i, "_educated")]
+    method_2_df[paste0("D", j)] / method_2_df[paste0("D", i)]
 }
 method_2_df = method_2_df %>% 
   mutate( 
