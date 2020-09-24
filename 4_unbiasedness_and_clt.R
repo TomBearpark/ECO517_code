@@ -5,7 +5,7 @@ library(ggplot2) # plots
 library(data.table) # fread command to easily read in this nasty asc file
 library(testthat) # Assert statements
 library(patchwork) # Combining ggplot objects
-set.seed(123) # Make random numbers replicable
+set.seed(1) # Make random numbers replicable
 theme_set(theme_bw()) # ggplot theme
 
 # Output location string
@@ -71,13 +71,37 @@ ggplot(data =df_means) +
 ggsave(file= paste0(dir, "/means_of_30_samples_histogram.png"), height = 5, width = 5)
 
 # 2. Diplay a qqplot - using SIMS code rather than ggplot2 :(
-df_means$len = 1:30
 png(file=paste0(dir, "/qqplot_sample_means.png"))
     qqnorm(df_means$Sample_mean, col = "steelblue")
 dev.off()
 
 
-# Extention - can we make it seem more like a normal if we take more s
+# Extension 1
+# See how it works if we exclude the top decile from this analysis...
+df_truncated = df %>% 
+    mutate(decile = ntile(values,10)) %>% 
+    filter(decile!=10)
+values_truncated = df_truncated$population
+ggplot(data =df_truncated) + 
+    geom_histogram(aes(x = population))
+
+df_means_truncated = lapply(seq(1,30, 1), get_sample, values = values_truncated) %>% 
+    bind_rows() %>% 
+    group_by(index) %>%
+    summarize(Sample_mean = mean(population))
+
+ggplot(data = df_means_truncated)+
+    geom_histogram(aes(x = Sample_mean), alpha = 0.5, fill = "blue") + 
+    ggtitle("Excluded top decile")
+ggsave(file= paste0(dir, "/truncated_means_of_30_samples_histogram.png"), height = 5, width = 5)
+
+png(file=paste0(dir, "/qqplot_truncated_sample_means.png"))
+    qqnorm(df_means_truncated$Sample_mean, col = "steelblue")
+dev.off()
+
+# Extension 2
+
+# Can we make it seem more like a normal if we take more s
 # samples, of bigger size? Answer: yes!
 
 # Lets try taking 1000 samples, each of size 200
@@ -119,6 +143,9 @@ ggsave(p/q/r, file = paste0(dir, "/means_of_many_samples_histogram.png"))
 
 ##################################
 # Question 2
+# Including this here again, even though we set it at the start
+# in case someone is just trying to run this part. 
+# crucial to set the seed to get replicable results
 set.seed(1)
 
 # Consider model where iid data drawn from normal N(mu, mu^2)
