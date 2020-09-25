@@ -116,7 +116,8 @@ plot_means = function(n_samples, size_sample){
         summarize(Sample_mean = mean(population))
 
     p = ggplot(data =df_means_big_s) +
-            geom_histogram(aes(x = Sample_mean), alpha = 0.5, fill = "blue") + 
+            geom_histogram(aes(x = Sample_mean), alpha = 0.5, 
+                fill = "blue") + 
             ggtitle(paste0(
                 "Samples=", n_samples, ", Size=", size_sample)) 
     return(p)
@@ -201,14 +202,20 @@ mean(mhat)
 1 - mean(mhat)
 
 means_df = bind_rows(
-    as.data.frame(mmean) %>%  mutate(mean_type = "sample_means")  %>% rename(value = mmean), 
-    as.data.frame(mhat) %>% mutate(mean_type = "posterior")%>% rename(value = mhat) 
-)
+    as.data.frame(mmean) %>% mutate(mean_type = "sample_means") %>% 
+        rename(value = mmean), 
+    as.data.frame(mhat) %>% mutate(mean_type = "posterior") %>% 
+        rename(value = mhat), 
+    data.frame(mavg = 0.5 * (mmean + sqrt(mmsigsq))) %>% 
+        mutate(mean_type = "Combination") %>% 
+        rename(value = mavg)
+    )
 
-ggplot(data = means_df) +
+ggplot(data = means_df %>% filter(mean_type != "Combination")) +
     geom_density(aes(x = value, color = mean_type))
 
-ggsave(file = paste0(dir, "/means_density_functions.png"), width = 5, height = 5)
+ggsave(file = paste0(dir, "/means_density_functions.png"), 
+        width = 5, height = 5)
  
 # Question 2 b)
 RMSE_means = means_df %>% 
@@ -219,12 +226,18 @@ RMSE_means = means_df %>%
 
 # Question 2 c)
 # calculate the average of sample mean and sample sd...
-mavg = 0.5*(mmean + sqrt(mmsigsq))
+mavg = 0.5 * (mmean + sqrt(mmsigsq))
 
 mean(mavg)
-ggplot(data = data.frame(mavg)) +
-    geom_density(aes(x = mavg))
 
+# Plot all three overlayed
+ggplot(data = means_df ) +
+    geom_density(aes(x = value, color = mean_type))
+
+ggsave(file = paste0(dir, "/three_types_means_density_functions.png"), 
+        width = 5, height = 5)
+ 
+# Calculate RMSE 
 rmse_mavg = data.frame(mavg) %>% 
     mutate(diff = mavg - 1) %>% 
     mutate(square_error = diff ^2) %>%
