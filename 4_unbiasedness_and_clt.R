@@ -1,4 +1,8 @@
-# Code for exercise 3, ECO517 at Princeton
+# Code for Exercise 4, ECO517 at Princeton
+
+# note: - make sure you have dplyr, ggplot2, data.table, testtha, patchwork
+#       packages up to date and installed to run this code
+#       - also, change the "dir" string to where you want to save outputs
 
 # Contents: 
 # 0. Set up environment and libraries 
