@@ -66,12 +66,14 @@ ggplot(data =df) +
     geom_histogram(aes(x = population), alpha = 0.5, fill = "blue") + 
     ggtitle("Histogram of full sample population values")
 
-ggsave(file= paste0(dir, "/full_sample_raw_histogram.png"), height = 5, width = 5)
+ggsave(file= paste0(dir, "/full_sample_raw_histogram.png"), height = 5, 
+    width = 5)
 
 ggplot(data = df %>% filter(population < 10000)) +
     geom_histogram(aes(x = population), alpha = 0.5, fill = "blue") + 
     ggtitle("Histogram of sample population values, pop < 10000")
-ggsave(file= paste0(dir, "/small_pop_cities_sample_histogram.png"), height = 5, width = 5)
+ggsave(file= paste0(dir, "/small_pop_cities_sample_histogram.png"), height = 5, 
+    width = 5)
 
 
 
@@ -206,8 +208,10 @@ for (id in 1:ndraw) {
 # 2.2 Analysis for Pset Questions
 # Question 2 a)
 # Find means and their bias (ie difference on average from true mean)
-mean(mmean)
+
 mean(mhat)
+mean(mmean)
+
 1 - mean(mmean)
 1 - mean(mhat)
 
@@ -256,5 +260,5 @@ rmse_mavg = data.frame(mavg) %>%
 data.frame(
     estimator = c("Frequentist", "Posterior", "Improved Frequentist"), 
     bias = c(1 - mean(mmean),1 - mean(mhat), 1 - mean(mavg)), 
-    RMSE = c(rev(RMSE_means$RMSE), rmse_mavg)
+    RMSE = c(rev(RMSE_means$RMSE))
 )
