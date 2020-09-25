@@ -1,4 +1,18 @@
-# Code for exercise 3
+# Code for exercise 3, ECO517 at Princeton
+
+# Contents: 
+# 0. Set up environment and libraries 
+# 1. Question 1
+    # 1.0 Prepare data, plot initial visuals
+    # 1.1 Plot histograms of sample means required by the question
+    # 1.2 Extensions - truncation, brute computational force
+# 2. Question 2
+    # 2.1 Run Prof Sims code
+    # 2.2 Solve pset questions
+
+##################################
+# 0. Set up environment and libraries 
+
 rm(list = ls())
 library(dplyr) # data manipulation, and piping
 library(ggplot2) # plots
@@ -57,7 +71,7 @@ ggsave(file= paste0(dir, "/small_pop_cities_sample_histogram.png"), height = 5, 
 
 
 
-# 1. Display histogram of sample means
+# 1.1. Display histogram of sample means
 df_means = df_30_s %>% 
     group_by(index) %>%
     summarize(Sample_mean = mean(population))
@@ -75,6 +89,7 @@ png(file=paste0(dir, "/qqplot_sample_means.png"))
     qqnorm(df_means$Sample_mean, col = "steelblue")
 dev.off()
 
+# 1.2 Extentions
 
 # Extension 1
 # See how it works if we exclude the top decile from this analysis...
@@ -149,34 +164,27 @@ ggsave(p/q/r, file = paste0(dir, "/means_of_many_samples_histogram.png"))
 # crucial to set the seed to get replicable results
 set.seed(1)
 
-# Consider model where iid data drawn from normal N(mu, mu^2)
+# 2.1 Run Prof Sims code
 
 # Set sample size and number of draws
 N <- 20
 ndraw <- 30
-
 ## This function returns the kernel of the log posterior pdf for a sample of size N, 
 ## sample mean xbar, and sample standard deviation s.
 lmpdf <- function(mu,xbar, s,N) {
     -N * log(abs(mu)) - .5 * N *(s^2 + (xbar- mu)^2)/mu^2
 }
-
 # Get matrix of draws
 mms <- matrix(rnorm(N * ndraw, mean=1, sd=1), N, ndraw)
-
 # Find means for each sample
 mmean <- apply(mms, 2, mean)
-
 #  find s^2 for each sample
 mmsigsq <- apply(mms, 2, var) * (N-1)/N   #R uses N-1 in denominator
-
 # Initialise vector - zeros of length ndraw
 mnorm <- vector("numeric", ndraw)
 mhat <- mnorm
-
 ## we need a rough value of mmax to scale the log likelihood when exponentiating.
 mmax <- max(lmpdf(seq(-.5, 1.5, length=300), mmean[1], sqrt(mmsigsq[1]), N))
-
 ## Compute the scale factor of the likelihood in each sample that makes it
 ## integrate to one.
 ## This range of integration works for N=20. Might need adjustment for other N's.
@@ -184,23 +192,22 @@ for (id in 1:ndraw){
     mnorm[id] <- integrate(function(mu)exp(lmpdf(mu, mmean[id], 
         sqrt(mmsigsq[id]), N)-mmax), lower=.5, upper=1.5)$value
 } 
-
 # Find the posterior means
 for (id in 1:ndraw) {
     mhat[id] <- integrate(function(mu) mu * exp(lmpdf(mu, mmean[id], 
        sqrt(mmsigsq[id]),N)-mmax), lower=.5, upper=1.5)$value/mnorm[id]
 }
+## mhat should be the posterior means, mmean should be the unbiased sample means
 
-## mhat should be the posterior means.
-## mmean should be the unbiased sample means
-
+# 2.2 Analysis for Pset Questions
 # Question 2 a)
+# Find means and their bias (ie difference on average from true mean)
 mean(mmean)
 mean(mhat)
-
 1 - mean(mmean)
 1 - mean(mhat)
 
+# Get dataframe of all three types of estimators
 means_df = bind_rows(
     as.data.frame(mmean) %>% mutate(mean_type = "sample_means") %>% 
         rename(value = mmean), 
@@ -210,14 +217,15 @@ means_df = bind_rows(
         mutate(mean_type = "Combination") %>% 
         rename(value = mavg)
     )
-
+# Plot density function 
 ggplot(data = means_df %>% filter(mean_type != "Combination")) +
     geom_density(aes(x = value, color = mean_type))
-
 ggsave(file = paste0(dir, "/means_density_functions.png"), 
         width = 5, height = 5)
  
 # Question 2 b)
+
+# Calculate RMSE
 RMSE_means = means_df %>% 
     mutate(diff = value - 1) %>% 
     mutate(square_error = diff ^2) %>% 
@@ -227,13 +235,10 @@ RMSE_means = means_df %>%
 # Question 2 c)
 # calculate the average of sample mean and sample sd...
 mavg = 0.5 * (mmean + sqrt(mmsigsq))
-
 mean(mavg)
-
 # Plot all three overlayed
 ggplot(data = means_df ) +
     geom_density(aes(x = value, color = mean_type))
-
 ggsave(file = paste0(dir, "/three_types_means_density_functions.png"), 
         width = 5, height = 5)
  
@@ -245,18 +250,7 @@ rmse_mavg = data.frame(mavg) %>%
 
 # Final dataframe of results, for sticking in the overleaf
 data.frame(
-    estimator = c(
-        "Frequentist", 
-        "Posterior", 
-        "Improved Frequentist"
-    ), 
-    bias = c(
-        1 - mean(mmean),
-        1 - mean(mhat),
-        1 - mean(mavg)
-    ), 
-    RMSE = c(
-        rev(RMSE_means$RMSE), 
-        rmse_mavg
-    )
+    estimator = c("Frequentist", "Posterior", "Improved Frequentist"), 
+    bias = c(1 - mean(mmean),1 - mean(mhat), 1 - mean(mavg)), 
+    RMSE = c(rev(RMSE_means$RMSE), rmse_mavg)
 )
