@@ -75,8 +75,6 @@ ggplot(data = df %>% filter(population < 10000)) +
 ggsave(file= paste0(dir, "/small_pop_cities_sample_histogram.png"), height = 5, 
     width = 5)
 
-
-
 # 1.1. Display histogram of sample means
 df_means = df_30_s %>% 
     group_by(index) %>%
