@@ -58,6 +58,11 @@ ggplot(data = df_a) +
 mu = df_a$mu_s
 sigma = df_a$se
 
+
+draw = rnorm(length(mu), 
+             mean = mu, sd = sigma)
+
+
 # Function for taking draws
 draw_and_test = function(i, mu, sigma) {
     
