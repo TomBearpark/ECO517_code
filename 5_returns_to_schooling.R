@@ -57,7 +57,7 @@ sigma = df_cond$se
 
 
 # Function for doing the checks asked for in the pset
-return_tests = function(draw){
+return_tests = function(draw, i){
     df = data.frame(
         # Draw indicator
         draw = i, 
@@ -83,7 +83,7 @@ draw_and_test_a = function(i, mu, sigma) {
     draw = rnorm(length(mu), 
                  mean = mu, sd = sigma)[-1]
     
-    df = return_tests(draw)
+    df = return_tests(draw, i = i)
     
     return(df)
 }
@@ -121,8 +121,9 @@ for (i in 1:5){
 shape_vect = (df_cond$n - 3) / 2
 scale_vect  = (df_cond$n * df_cond$sd^2) / 2
 
-# Take a dreaw, return checks for a given draw
+# Take a draw, return checks for a given draw
 draw_and_test_b = function(i, shape_vect, scale_vect, mu){
+    
     # Take sigma draws, as 1 / gamma draw
     sigma_draw = sqrt(1 / rgamma(n = length(shape_vect), 
                                  shape = shape_vect, scale = scale_vect))
@@ -132,10 +133,11 @@ draw_and_test_b = function(i, shape_vect, scale_vect, mu){
                  mean = mu, sd = sigma_draw)[-1]
     
     # Do tests and collect results
-    df = return_tests(draw)
+    df = return_tests(draw, i = i)
     
     return(df)
 }
+
 df_b = lapply(seq(1, num_draws), 
               draw_and_test_b, 
               mu = mu, shape_vect = shape_vect, scale_vect = scale_vect) %>% 
@@ -145,6 +147,33 @@ for (i in 1:5){
     print(paste0("Num draws satisfying test ", i, ": ",
                  sum(df_b[paste0("check", i)])))
 }
+
+
+# T distribution version... 
+# We dont' bother renormalising, since they are relatives
+t_df = df_cond$n - 3
+scale_t = df_cond$sd / sqrt(df_cond$n - 3)
+
+draw_and_test_t = function(i, t_df, scale_t){
+    
+    draw = rt(length(t_df), df = t_df, ncp = scale_t)
+    
+    # Do tests and collect results
+    df = return_tests(draw, i = i)
+    
+    return(df)
+}
+
+df_t = lapply(seq(1, num_draws), 
+              draw_and_test_t, 
+              t_df = t_df, scale_t = scale_t) %>% 
+    bind_rows()
+
+for (i in 1:5){
+    print(paste0("Num draws satisfying test ", i, ": ",
+                 sum(df_b[paste0("check", i)])))
+}
+
 
 #########################################
 # Further AK analysis
@@ -178,8 +207,6 @@ for (i in seq(0,18,3)){
     col = c(col, paste0(i, " to ", j, " years educ"))
     
 }
-
-
 
 replic_df = data.frame(coefficient = LMs, id = as.factor(col)) %>% 
     mutate(num_id = row_number() * 3)
@@ -237,6 +264,18 @@ split.lm.low_cs = lm(logwage ~ educ + as.factor(yob),
 
 summary(split.lm.high_cs)
 summary(split.lm.low_cs)
+
+# Create interaction term
+df  = df %>% mutate(cluster_scaled_ind = ifelse(cluster_scaled == 2, 1, 0), 
+                    cluster_unscaled_ind = ifelse(cluster_unscaled == 2, 1, 0), 
+                    educ.cluster_scaled = cluster_scaled_ind * educ, 
+                    educ.cluster_unscaled = cluster_unscaled_ind * educ)
+
+lm.cu = lm(logwage ~ educ + educ.cluster_unscaled + as.factor(yob), data = df)
+lm.cs = lm(logwage ~ educ + educ.cluster_scaled + as.factor(yob), data = df)
+
+ggplot(data = df) + 
+    geom_point(aes(x = educ, y = logwage, color = ))
 
 # These results are nonsence i think. Removing legit y variation... 
 
