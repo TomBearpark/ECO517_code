@@ -15,6 +15,7 @@
 rm(list = ls())
 library(dplyr) # data manipulation, and piping
 library(ggplot2) # plots
+library(tidyr) # reshaping data
 
 set.seed(1) # Make random numbers replicable
 theme_set(theme_bw()) # ggplot theme
@@ -45,7 +46,7 @@ ggplot(data = df_cond) +
                       ymin = mu_s - 1.96 * se, ymax = mu_s + 1.96 * se)) +
     ggtitle("Conditional means with +- 1.96 SE errorbars")
 
-ggsave(paste0(dir, "conditional_means.pdf"))
+ggsave(paste0(dir, "conditional_means.pdf"), height=6, width = 7)
 
 # Check out the n per educ group
 ggplot(data = df_cond) + 
@@ -70,7 +71,12 @@ return_tests = function(draw, i){
         # Check 4: monotone 17 to 20
         check4 = 1*all(diff(draw[seq(17,20)])>0), 
         # Check 5: 
-        check5 = 1*(draw[16] - draw[12] >  draw[12] - draw[8])
+        check5 = 1*(draw[16] - draw[12] >  draw[12] - draw[8]),
+        
+        # Some draws we want to plot...
+        mu18 = draw[18], 
+        mu19 = draw[19]
+        
     )
     return(df)
 }
@@ -102,6 +108,22 @@ for (i in 1:5){
 }
 
 
+# Extra intuition plot... 
+
+vals = data.frame(min_18 = min(df_a$mu18), 
+max_19 = max(df_a$mu19))
+df_a_plot = df_a %>% 
+    select(c("draw", "mu18", "mu19")) %>% 
+    pivot_longer(c("mu18", "mu19"))
+
+ggplot() +
+    geom_histogram(data = df_a_plot, aes(x = value, fill = name), alpha = 0.4) + 
+    geom_vline(data = vals, aes(xintercept = min_18), color = "red") +
+    geom_vline(data = vals, aes(xintercept = max_19), color = "blue") + 
+    geom_hline(yintercept = 0, color = "black")
+
+ggsave(paste0(dir, "mu_19and18.pdf"), height=6, width = 7)
+
 ##################################
 # Method 2
 
@@ -120,6 +142,8 @@ for (i in 1:5){
 # 1 Get input vectors
 shape_vect = (df_cond$n - 3) / 2
 scale_vect  = (df_cond$n * df_cond$sd^2) / 2
+
+data.frame(educ = df_cond$educ, shape_vect = shape_vect, scale_vect = scale_vect)
 
 # Take a draw, return checks for a given draw
 draw_and_test_b = function(i, shape_vect, scale_vect, mu){
@@ -279,12 +303,12 @@ ggplot(data = df) +
 
 # These results are nonsence i think. Removing legit y variation... 
 
-
 # 2.4 Look for some non-linearity, include cubic terms
 df = df %>% mutate(educ_2 = educ^2, educ_3 = educ^3)
 
 cubic.lm = lm(logwage ~ educ + educ_2 + educ_3 + as.factor(yob), data = df)
 summary(cubic.lm)
+
 
 
 
