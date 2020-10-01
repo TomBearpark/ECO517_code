@@ -232,7 +232,7 @@ df$cluster_scaled = kmeans(df[c(1,2)] %>%
                                       educ = educ / sd(akdataf$educ)) , 
                            2, iter.max=100)$cluster
 
-df$cluster = kmeans(df[c(1,2)], 
+df$cluster_unscaled = kmeans(df[c(1,2)], 
                     2, iter.max=100)$cluster
     
 df = df %>% 
