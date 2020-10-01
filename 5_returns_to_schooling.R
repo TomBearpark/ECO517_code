@@ -1,12 +1,16 @@
 # Code for Exercise 5, ECO517 at Princeton
 
-# note: - make sure you have dplyr, ggplot2, 
+# note: - make sure you have dplyr, ggplot2, tidyr
 #       packages up to date and installed to run this code
 #       - also, change the "dir" string to where you want to save outputs
 
 # Contents: 
 # 0. Set up environment and libraries 
 # 1 Implement method 1
+# 2 Implement method 2
+# extension - implement method 2 directly as a t-distribution
+# 3 run regression models extending AK analysis
+
 
 
 ##################################
@@ -73,7 +77,7 @@ return_tests = function(draw, i){
         # Check 5: 
         check5 = 1*(draw[16] - draw[12] >  draw[12] - draw[8]),
         
-        # Some draws we want to plot...
+        # Also return some draws we want to plot...
         mu18 = draw[18], 
         mu19 = draw[19]
         
@@ -85,7 +89,7 @@ return_tests = function(draw, i){
 # results for a given draw.
 draw_and_test_a = function(i, mu, sigma) {
     
-    # Take draws. Note, we drop the zero educ draw to follow pset 
+    # Take draws. Note, we drop the zero educ draw to follow pset notation
     draw = rnorm(length(mu), 
                  mean = mu, sd = sigma)[-1]
     
@@ -108,7 +112,7 @@ for (i in 1:5){
 }
 
 
-# Extra intuition plot... 
+# Extra intuition plot... comparing mu18 and mu19 distributions
 
 vals = data.frame(min_18 = min(df_a$mu18), 
 max_19 = max(df_a$mu19))
@@ -173,8 +177,10 @@ for (i in 1:5){
 }
 
 
-# T distribution version... 
-# We dont' bother renormalising, since they are relatives
+# Extention: T distribution version... 
+# We dont' bother renormalising, since the tests are all just on relative 
+# magnitudes 
+
 t_df = df_cond$n - 3
 scale_t = df_cond$sd / sqrt(df_cond$n - 3)
 
@@ -200,7 +206,7 @@ for (i in 1:5){
 
 
 #########################################
-# Further AK analysis
+# 3. Further AK analysis
 
 # see paper at this link...
 # https://www.jstor.org/stable/pdf/2937954.pdf?refreqid=excelsior%3A875da335947556d4de1c669ef34fbba5
@@ -244,6 +250,7 @@ df = df %>%
 ggplot(data = df) +
     geom_point(aes(x = educ, y = logwage, color = cluster_scaled))
 
+# Run regressoins, including a k-means cluster interaction term
 kmeans.lm = lm(logwage ~ educ + educ.cluster + as.factor(yob), data = df)
 summary(kmeans.lm)
 kmeans.us.lm = lm(logwage ~ educ + educ.cluster_unscaled + as.factor(yob), data = df)
