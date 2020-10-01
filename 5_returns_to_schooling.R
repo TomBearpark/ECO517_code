@@ -213,102 +213,39 @@ df %>% mutate(y_and_q = yob + 0.25 * qob) %>%
     ggplot() +
         geom_line(aes(x = y_and_q,y=years_completed))
 
-# Table five, column 1
-c = lm(logwage ~ educ + as.factor(yob), data = df)$coefficients["educ"]
+# 2.0 Replicate Table five, column 1
+c = lm(logwage ~ educ + as.factor(yob), data = df)
+summary(c)
 
-# 2.1 Look for some non-linearity, three year subsets
 
-LMs = c()
-col = c()
-for (i in seq(0,18,3)){
-    print(i)
-    j = i+3
-    LMs = c(LMs,
-        lm(logwage ~ educ +  as.factor(yob), 
-            data = df %>% 
-               filter(educ >= !!i,
-                   educ < !!j))$coefficients["educ"])
-    col = c(col, paste0(i, " to ", j, " years educ"))
-    
-}
-
-replic_df = data.frame(coefficient = LMs, id = as.factor(col)) %>% 
-    mutate(num_id = row_number() * 3)
-
-# Coefficients for each three year group
-ggplot(replic_df) +
-    geom_point(aes(x = num_id, y = coefficient)) + 
-    geom_hline(yintercept = c, color = "red", alpha = 0.5)
-
-# 2.2 Look for some non-linearity, split sample on low / high wage
-
-# Split low and high wage people by the median wage. Check coefficients in each 
-# portion
-med_lw = median(df$logwage)
-df = df %>% mutate(highwage = ifelse(logwage >= med_lw, 1,0))
-
-split.lm.high = lm(logwage ~ educ + as.factor(yob), 
-                  data = df %>% filter(highwage == 1))
-
-split.lm.low = lm(logwage ~ educ + as.factor(yob), 
-                  data = df %>% filter(highwage == 0))
-
-summary(split.lm.high)
-summary(split.lm.low)
-
-# 2.3 Use k-means to do some clustering. Run separate regressions in each cluster
-
-# On the unscaled version
-
-df$cluster_unscaled = kmeans(df[c(1,2)], 2, iter.max=100)$cluster
-
-split.lm.high_cu = lm(logwage ~ educ + as.factor(yob), 
-                   data = df %>% filter(cluster_unscaled == 1))
-
-split.lm.low_cu = lm(logwage ~ educ + as.factor(yob), 
-                  data = df %>% filter(cluster_unscaled == 2))
-
-summary(split.lm.high_cu)
-summary(split.lm.low_cu)
-
-# On the scaled version
-
-df$cluster_scaled = kmeans(df[c(1,2)] %>% 
-                               mutate(logwage = logwage / sd(akdataf$logwage), 
-                                      educ = educ / sd(akdataf$educ)) , 
-                           2, iter.max=100)$cluster
-ggplot(data = df) +
-    geom_point(aes(x = educ, y = logwage, color = cluster_scaled))
-
-split.lm.high_cs = lm(logwage ~ educ + as.factor(yob), 
-                      data = df %>% filter(cluster_scaled == 1))
-
-split.lm.low_cs = lm(logwage ~ educ + as.factor(yob), 
-                     data = df %>% filter(cluster_scaled == 2))
-
-summary(split.lm.high_cs)
-summary(split.lm.low_cs)
-
-# Create interaction term
-df  = df %>% mutate(cluster_scaled_ind = ifelse(cluster_scaled == 2, 1, 0), 
-                    cluster_unscaled_ind = ifelse(cluster_unscaled == 2, 1, 0), 
-                    educ.cluster_scaled = cluster_scaled_ind * educ, 
-                    educ.cluster_unscaled = cluster_unscaled_ind * educ)
-
-lm.cu = lm(logwage ~ educ + educ.cluster_unscaled + as.factor(yob), data = df)
-lm.cs = lm(logwage ~ educ + educ.cluster_scaled + as.factor(yob), data = df)
-
-ggplot(data = df) + 
-    geom_point(aes(x = educ, y = logwage, color = ))
-
-# These results are nonsence i think. Removing legit y variation... 
-
-# 2.4 Look for some non-linearity, include cubic terms
+# 2.1 Look for some non-linearity, include cubic terms
 df = df %>% mutate(educ_2 = educ^2, educ_3 = educ^3)
 
 cubic.lm = lm(logwage ~ educ + educ_2 + educ_3 + as.factor(yob), data = df)
 summary(cubic.lm)
 
+# 2.2 Use k-means to do some clustering. Run separate regressions in each cluster
 
+# Split observations into their clusters. Identify with a Dummy
+df$cluster_scaled = kmeans(df[c(1,2)] %>% 
+                               mutate(logwage = logwage / sd(akdataf$logwage), 
+                                      educ = educ / sd(akdataf$educ)) , 
+                           2, iter.max=100)$cluster
 
+df$cluster = kmeans(df[c(1,2)], 
+                    2, iter.max=100)$cluster
+    
+df = df %>% 
+    mutate(cluster_scaled = ifelse(cluster_scaled == 1, 0, 1)) %>% 
+    mutate(educ.cluster = educ * cluster_scaled, 
+           educ.cluster_unscaled = educ*cluster_unscaled)
+
+# Check it's what we were expecting
+ggplot(data = df) +
+    geom_point(aes(x = educ, y = logwage, color = cluster_scaled))
+
+kmeans.lm = lm(logwage ~ educ + educ.cluster + as.factor(yob), data = df)
+summary(kmeans.lm)
+kmeans.us.lm = lm(logwage ~ educ + educ.cluster_unscaled + as.factor(yob), data = df)
+summary(kmeans.us.lm)
 
