@@ -177,9 +177,32 @@ for (i in 1:5){
                  sum(df_b[paste0("check", i)])))
 }
 
-# Plot for intuition
+# Extention: T distribution version... 	df_18 = data.frame()
+# We dont' bother renormalising, since the tests are all just on relative 	
+# magnitudes 	
 
-df_18 = data.frame()
+t_df = df_cond$n - 3	
+scale_t = df_cond$sd / sqrt(df_cond$n - 3)	
+
+draw_and_test_t = function(i, t_df, scale_t){	
+    
+    draw = rt(length(t_df), df = t_df, ncp = scale_t)	
+    
+    # Do tests and collect results	
+    df = return_tests(draw, i = i)	
+    
+    return(df)	
+}	
+
+df_t = lapply(seq(1, num_draws), 	
+              draw_and_test_t, 	
+              t_df = t_df, scale_t = scale_t) %>% 	
+    bind_rows()	
+
+for (i in 1:5){	
+    print(paste0("Num draws satisfying test ", i, ": ",	
+                 sum(df_b[paste0("check", i)])))	
+}
 
 
 #########################################
