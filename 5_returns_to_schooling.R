@@ -150,15 +150,16 @@ scale_vect  = (df_cond$n * df_cond$sd^2) / 2
 data.frame(educ = df_cond$educ, shape_vect = shape_vect, scale_vect = scale_vect)
 
 # Take a draw, return checks for a given draw
-draw_and_test_b = function(i, shape_vect, scale_vect, mu){
+draw_and_test_b = function(i, shape_vect, scale_vect, mu, n_vect){
     
     # Take sigma draws, as 1 / gamma draw
     sigma_draw = sqrt(1 / rgamma(n = length(shape_vect), 
                                  shape = shape_vect, rate = scale_vect))
     
+    se = sigma_draw / sqrt(n_vect)
     # Use these to draw from normal 
     draw = rnorm(length(mu), 
-                 mean = mu, sd = sigma_draw)[-1]
+                 mean = mu, sd = se)[-1]
     
     # Do tests and collect results
     df = return_tests(draw, i = i)
@@ -168,7 +169,7 @@ draw_and_test_b = function(i, shape_vect, scale_vect, mu){
 num_draws =1000
 df_b = lapply(seq(1, num_draws), 
               draw_and_test_b, 
-              mu = mu, shape_vect = shape_vect, scale_vect = scale_vect) %>% 
+              mu = mu, shape_vect = shape_vect, scale_vect = scale_vect, n_vect = df_cond$n) %>% 
     bind_rows()
 
 for (i in 1:5){
@@ -176,33 +177,9 @@ for (i in 1:5){
                  sum(df_b[paste0("check", i)])))
 }
 
+# Plot for intuition
 
-# Extention: T distribution version... 
-# We dont' bother renormalising, since the tests are all just on relative 
-# magnitudes 
-
-t_df = df_cond$n - 3
-scale_t = df_cond$sd / sqrt(df_cond$n - 3)
-
-draw_and_test_t = function(i, t_df, scale_t){
-    
-    draw = rt(length(t_df), df = t_df, ncp = scale_t)
-    
-    # Do tests and collect results
-    df = return_tests(draw, i = i)
-    
-    return(df)
-}
-
-df_t = lapply(seq(1, num_draws), 
-              draw_and_test_t, 
-              t_df = t_df, scale_t = scale_t) %>% 
-    bind_rows()
-
-for (i in 1:5){
-    print(paste0("Num draws satisfying test ", i, ": ",
-                 sum(df_b[paste0("check", i)])))
-}
+df_18 = data.frame()
 
 
 #########################################
