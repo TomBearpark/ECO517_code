@@ -256,3 +256,17 @@ summary(kmeans.lm)
 kmeans.us.lm = lm(logwage ~ educ + educ.cluster_unscaled + as.factor(yob), data = df)
 summary(kmeans.us.lm)
 
+
+# Sandwhich estimator test...
+# install.packages("sandwich")
+library(sandwich)
+vcovHC(c, type = "HC")
+sandwich_se = diag(vcovHC(c, type = "HC"))^0.5
+coef(c)-1.96*sandwich_se
+# Doesn't really do much to our results here...
+sandwich(c)
+
+
+
+
+
