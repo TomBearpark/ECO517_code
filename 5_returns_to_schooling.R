@@ -154,7 +154,7 @@ draw_and_test_b = function(i, shape_vect, scale_vect, mu){
     
     # Take sigma draws, as 1 / gamma draw
     sigma_draw = sqrt(1 / rgamma(n = length(shape_vect), 
-                                 shape = shape_vect, scale = scale_vect))
+                                 shape = shape_vect, rate = scale_vect))
     
     # Use these to draw from normal 
     draw = rnorm(length(mu), 
@@ -165,7 +165,7 @@ draw_and_test_b = function(i, shape_vect, scale_vect, mu){
     
     return(df)
 }
-
+num_draws =1000
 df_b = lapply(seq(1, num_draws), 
               draw_and_test_b, 
               mu = mu, shape_vect = shape_vect, scale_vect = scale_vect) %>% 
