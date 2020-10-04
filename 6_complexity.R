@@ -1,15 +1,12 @@
-# Code for Exercise 5, ECO517 at Princeton
+# Code for Exercise 6, ECO517 at Princeton
 
-# note: - make sure you have dplyr, ggplot2, tidyr
+# note: - make sure you have dplyr, ggplot2, car
 #       packages up to date and installed to run this code
 #       - also, change the "dir" string to where you want to save outputs
 
 # Contents: 
 # 0. Set up environment and libraries 
-# 1 Implement method 1
-# 2 Implement method 2
-# extension - implement method 2 directly as a t-distribution
-# 3 run regression models extending AK analysis
+# 1 
 
 
 
