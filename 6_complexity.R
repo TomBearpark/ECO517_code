@@ -107,6 +107,9 @@ ggplot(data = c2) +
 
 # F-test - R\beta= \gamma
 
+# Model 0
+anova.0 = Anova(lm.0)
+
 # Model 1
 anova.1 = Anova(lm.1)
 
