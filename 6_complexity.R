@@ -36,7 +36,7 @@ df = akdataf
 ####################################################################
 # 1 Run regressions
 
-# 1.1 - both as numberic
+# 1.1 - both as numeric
 lm.1 = lm(data = df, logwage ~ educ + yob)
 summary(lm.1)
 
@@ -81,9 +81,75 @@ lm.6 = lm(data = df, as.formula(paste0("logwage ~ educ + yob ", geq, dum)))
 
 
 ####################################################################
-# 2
+# 2 Frequentist tests
 
-lmout <- with(akdataf,lm(logwage ~ as.factor(educ) * as.factor(yob)))
+# F-test - R\beta= \gamma
+
+# Model 1
+anova.1 = Anova(lm.1)
+
+# Model 2
 anova.2 = Anova(lm.2)
+
+# Model 3
+anova.3 = Anova(lm.3)
+
+# Model 4
+# Calculate F-stat by comparing RSS to that of smaller model (ie in lm1)
+# Helper function to calculate F stats
+F_generate = function(lmR, lmU, N){
+    
+    RSSR = deviance(lmR)
+    RSSU = deviance(lmU)
+    k = length(lmU$coefficients) - length(lmR$coefficients) 
+    
+    return(
+       ((RSSR - RSSU)/ RSSU) * ((N - k)/ k)
+        )
+}
+
+N = length(df$educ)
+
+# replicate 1 - make sure our function does the same thing as the cars package
+lmVR = lm(data = df, logwage ~ educ)
+all.equal(F_generate(lmVR, lm.1, N = N), anova.1$`F value`[2], tolerance = 0.01)
+
+# Calculate F stat on the dummies block for model 4
+F_generate(lm.4, lm.1, N)
+
+# Model 5
+F_generate(lm.5, lm.1, N)
+
+
+
+####################################################################
+# 2 Bayesian tests
+
+# implement the BIC
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
