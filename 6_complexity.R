@@ -19,7 +19,6 @@
 rm(list = ls())
 library(dplyr) # data manipulation, and piping
 library(ggplot2) # plots
-library(tidyr) # reshaping data
 library(car)
 
 set.seed(1) # Make random numbers replicable
@@ -35,6 +34,11 @@ df = akdataf
 
 ####################################################################
 # 1 Run regressions
+
+# 1.0 - the one they actually use in their paper
+lm.0 = lm(data = df, logwage ~ educ + as.factor(yob))
+summary(lm.0)
+
 
 # 1.1 - both as numeric
 lm.1 = lm(data = df, logwage ~ educ + yob)
@@ -78,6 +82,24 @@ summary(lm.5)
 
 # 1.6 All the variables in items 4 and 5.
 lm.6 = lm(data = df, as.formula(paste0("logwage ~ educ + yob ", geq, dum)))
+
+
+
+# Extention... 
+# Can we visualise these? 
+# Compare model 2 to the model used in AK, checking out the treatmet effects
+
+return_coefs = function(model){
+    return(data.frame(var=names(coef(model)), coef=coef(model), row.names=NULL))
+}
+c2 = return_coefs(lm.2) %>% 
+    filter(grepl("educ", var)) %>% 
+    mutate(educ = row_number()) %>% 
+    mutate(coef_per_year = coef / educ)
+
+ggplot(data = c2) + 
+    geom_point(aes(x = educ, y = coef_per_year)) +
+    geom_hline(yintercept = lm.0$coefficients["educ"], color = "red")
 
 
 ####################################################################
