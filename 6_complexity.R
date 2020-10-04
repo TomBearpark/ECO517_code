@@ -20,6 +20,7 @@ rm(list = ls())
 library(dplyr) # data manipulation, and piping
 library(ggplot2) # plots
 library(tidyr) # reshaping data
+library(car)
 
 set.seed(1) # Make random numbers replicable
 theme_set(theme_bw()) # ggplot theme
@@ -30,4 +31,59 @@ dir = "/Users/tombearpark/Documents/princeton/1st_year/ECO517/exercises/5_week/"
 # Load in the data
 load(url("http://sims.princeton.edu/yftp/emet1_2020/kmeans/akdata.RData"))
 df = akdataf 
+
+
+####################################################################
+# 1 Run regressions
+
+# 1.1 - both as numberic
+lm.1 = lm(data = df, logwage ~ educ + yob)
+summary(lm.1)
+
+# 1.2 both as factors
+lm.2 = lm(data = df, logwage ~ as.factor(educ) + as.factor(yob))
+summary(lm.2)
+
+# 1.3 All dummies and their interactions
+lm.3 = lm(data = df, logwage ~ as.factor(educ) * as.factor(yob))
+summary(lm.3)
+stopifnot(length(lm.3$coefficients) == 210)
+
+# 1.4 educ and yob as numeric variables, 
+# plus dummies for educ at the values 8, 12,16 and 20.
+df = df %>% mutate(
+    D8 = ifelse(educ == 8, 1, 0), 
+    D12 = ifelse(educ == 12, 1, 0), 
+    D16 = ifelse(educ == 16, 1, 0), 
+    D20 = ifelse(educ == 20, 1, 0)
+)
+dum = paste("+ D8 + D12 + D16 + D20")
+
+lm.4 = lm(data = df, as.formula(paste0("logwage ~ educ + yob",  dum)))
+summary(lm.4)
+
+# 1.5 educ and yob as numeric variables, plus dummies for 
+# educ >= 8, educ >= 12, educ >= 16,and educ == 20.
+
+df = df %>% mutate(
+    D_geq_8 = ifelse(educ >= 8, 1, 0), 
+    D_geq_12 = ifelse(educ >= 12, 1, 0), 
+    D_geq_16 = ifelse(educ >= 16, 1, 0), 
+    D_geq_20 = ifelse(educ >= 20, 1, 0)
+)
+geq = paste("+ D_geq_8 + D_geq_12 + D_geq_16 + D_geq_20")
+
+lm.5 = lm(data = df, as.formula(paste0("logwage ~ educ + yob ", geq)))
+summary(lm.5)
+
+# 1.6 All the variables in items 4 and 5.
+lm.6 = lm(data = df, as.formula(paste0("logwage ~ educ + yob ", geq, dum)))
+
+
+####################################################################
+# 2
+
+lmout <- with(akdataf,lm(logwage ~ as.factor(educ) * as.factor(yob)))
+anova.2 = Anova(lm.2)
+
 
