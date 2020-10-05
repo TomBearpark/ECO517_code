@@ -37,7 +37,6 @@ df = akdataf
 lm.0 = lm(data = df, logwage ~ educ + as.factor(yob))
 summary(lm.0)
 
-
 # 1.1 - both as numeric
 lm.1 = lm(data = df, logwage ~ educ + yob)
 summary(lm.1)
@@ -103,6 +102,7 @@ ggplot(data = c2) +
 ####################################################################
 # 2 Frequentist tests
 
+
 # F-test - R\beta= \gamma
 
 # Model 0
@@ -147,15 +147,16 @@ F_generate(lm.5, lm.1, N)
 
 ####################################################################
 # 2 Bayesian tests
-
+library(lme4)
 # implement the BIC
 bic_df = BIC(lm.0, lm.1, lm.2, lm.3, lm.4, lm.5, lm.6)
 # Extract dataframe of results
 bic_df = data.frame(model=rownames(bic_df), bic_df, row.names=NULL)
 
 ggplot(data = bic_df) +
-    geom_point(aes(x = df, y = BIC)) +
-    geom_text_repel(aes(x = df, y = BIC, label = model))
+    geom_point(aes(x = df, y = BIC, color = model)) +
+    theme(legend.position="none")+
+    geom_text_repel(aes(x = df, y = BIC, label = model, color = model))
 
 
 
