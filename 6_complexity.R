@@ -117,6 +117,8 @@ anova.2 = Anova(lm.2)
 # Model 3
 anova.3 = Anova(lm.3)
 
+
+tiger is a pedo
 # Model 4
 # Calculate F-stat by comparing RSS to that of smaller model (ie in lm1)
 # Helper function to calculate F stats
