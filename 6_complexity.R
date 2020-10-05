@@ -17,6 +17,7 @@ rm(list = ls())
 library(dplyr) # data manipulation, and piping
 library(ggplot2) # plots
 library(car)
+library(ggrepel) # Making text on scatter plots nicely spaced
 
 set.seed(1) # Make random numbers replicable
 theme_set(theme_bw()) # ggplot theme
@@ -148,6 +149,14 @@ F_generate(lm.5, lm.1, N)
 # 2 Bayesian tests
 
 # implement the BIC
+bic_df = BIC(lm.0, lm.1, lm.2, lm.3, lm.4, lm.5, lm.6)
+# Extract dataframe of results
+bic_df = data.frame(model=rownames(bic_df), bic_df, row.names=NULL)
+
+ggplot(data = bic_df) +
+    geom_point(aes(x = df, y = BIC)) +
+    geom_text_repel(aes(x = df, y = BIC, label = model))
+
 
 
 
