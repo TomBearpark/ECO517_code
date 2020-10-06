@@ -12,18 +12,19 @@
 
 ##################################
 # 0. Set up environment and libraries 
+install.packages("glmnet")
 
 rm(list = ls())
 library(dplyr) # data manipulation, and piping
 library(ggplot2) # plots
 library(car)
 library(ggrepel) # Making text on scatter plots nicely spaced
-
+library(glmnet)
 set.seed(1) # Make random numbers replicable
 theme_set(theme_bw()) # ggplot theme
 
 # Output location string
-dir = "/Users/tombearpark/Documents/princeton/1st_year/ECO517/exercises/5_week/"
+dir = "/Users/tombearpark/Documents/princeton/1st_year/ECO517/exercises/6_week/"
 
 # Load in the data
 load(url("http://sims.princeton.edu/yftp/emet1_2020/kmeans/akdata.RData"))
@@ -82,7 +83,7 @@ lm.6 = lm(data = df, as.formula(paste0("logwage ~ educ + yob ", geq, dum)))
 
 
 
-# Extention... 
+# Extension... 
 # Can we visualise these? 
 # Compare model 2 to the model used in AK, checking out the treatmet effects
 
@@ -92,10 +93,10 @@ return_coefs = function(model){
 c2 = return_coefs(lm.2) %>% 
     filter(grepl("educ", var)) %>% 
     mutate(educ = row_number()) %>% 
-    mutate(coef_per_year = coef / educ)
+    mutate(marginal = coef - lag(coef))
 
 ggplot(data = c2) + 
-    geom_point(aes(x = educ, y = coef_per_year)) +
+    geom_point(aes(x = educ, y = marginal)) +
     geom_hline(yintercept = lm.0$coefficients["educ"], color = "red")
 
 
@@ -161,17 +162,48 @@ ggplot(data = bic_df) +
 
 
 
+####################################################################
+# 3 Cross validation
+head(df)
+
+# Get outcome as a matrix - for use in cv.glmnet function
+y = df$logwage %>% as.matrix()
+
+# Get a dataframe of variables we want to use in CV
+dd = df  %>% 
+    select(educ, yob, starts_with("D_geq")) %>% 
+    mutate(educ_f = as.factor(educ), yob_f = as.factor(yob))
+
+# Turn it into a matrix of dummies
+X = model.matrix(~ educ + educ_f + educ:yob_f + educ:educ_f:yob_f, dd)
+
+# run k-fold cv
+fit = cv.glmnet(X, y)
+plot(fit)
+
+get_results = function(fit){
+    tmp_coeffs <- coef(fit)
+    myResults <- data.frame(
+        feature = tmp_coeffs@Dimnames[[1]][ which(tmp_coeffs != 0 ) ], #intercept included
+        coef    = tmp_coeffs              [ which(tmp_coeffs != 0 ) ]  #intercept included
+    )
+    return(myResults)
+}
+get_results(fit)
 
 
+# Try with more coefs...
+eq_dum = paste0(" + educ:D_geq_8 + educ:D_geq_12 + educ:D_geq_16 + educ:D_geq_20 ", 
+                " + D_geq_8 + D_geq_12 + D_geq_16 + D_geq_20 ")
 
+formula = paste("~ educ + educ_f + educ:yob_f + educ:educ_f:yob_f", eq_dum, 
+                collapse = " ") %>% 
+    as.formula()
 
-
-
-
-
-
-
-
+X_2 = model.matrix(formula, dd)
+fit2 = cv.glmnet(X_2, y)
+plot(fit2)
+get_results(fit2)
 
 
 
