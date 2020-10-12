@@ -178,7 +178,7 @@ get_results = function(fit){
     return(myResults)
 }
 
-# Fefine coefs string...
+# Define coefs string...
 eq_dum = paste0(" + educ:D_geq_8 + educ:D_geq_12 + educ:D_geq_16 + educ:D_geq_20 ", 
                 " + D_geq_8 + D_geq_12 + D_geq_16 + D_geq_20 ")
 

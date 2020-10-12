@@ -15,7 +15,7 @@ ggplot(data = draws) +
 
 # Question 2
 
-
+library(ggplot2)
 normal_normal = function(x){
   mu = 1
   sigma =1 
