@@ -1,0 +1,56 @@
+---
+title: "Problem 1"
+output: pdf_document
+---
+
+First, create the environment and load packages.
+
+```{r message=FALSE, warning=FALSE}
+rm(list = ls())
+library(ggplot2)
+library(dplyr)
+library(data.table)
+library(patchwork)
+library(stargazer)
+
+theme_set(theme_bw())
+dir = paste0("/Users/tombearpark/Documents/princeton/1st_year", 
+             "/ECO517/honore/assignments/pr2/")
+```
+
+Now, lets define some functions that load in the datasets and plot visualisations
+
+```{r}
+get_data = function(dir, name){
+  df = fread(paste0(dir, name)) %>% 
+    as.data.frame() %>% 
+    rename(LNWAGE = V11, 
+           ED = V1) %>% 
+    mutate(WAGE = exp(LNWAGE))
+  return(df)
+}
+
+# Consider a visualisation
+plot_correlations = function(df){
+  
+  corr = round(cor(df$WAGE, df$ED), 4)
+  corr_ln = round(cor(df$LNWAGE, df$ED), 4)
+
+  ggplot(data = df) +
+    geom_point(aes(x = ED, y = WAGE)) + 
+    ggtitle(paste0("Corr: ", corr)) +
+  ggplot(data = df) +
+    geom_point(aes(x = ED, y = LNWAGE))+ 
+    ggtitle(paste0("Corr: ", corr_ln))
+}
+```
+
+## Problem 1
+Nowe we can run the functions to answer question 1
+
+```{r}
+df = get_data(dir = dir, name = "Cps78")
+plot_correlations(df)
+```
+
+
