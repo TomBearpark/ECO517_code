@@ -165,11 +165,15 @@ stargazer(lm78, lm78_ex, lm85, lm85_ex)
 
 
 
+######################################
+# Problem 2
+######################################
+
+x = rnorm(800)
+y = x^2
+summary(lm(y ~ x))
 
 
-# Problem 3
-denom = function(m) sum((rnorm(m))^2 )/ m
-plot(seq(1,200), denom(seq(1,200)))
 
 
 
