@@ -1,12 +1,13 @@
 # Pset 1 for Honore - Problem set 2. Questions 1 and 2
 
 rm(list = ls())
-library(ggplot2)
-library(dplyr)
-library(patchwork)
-library(stargazer)
-
+library(ggplot2)   # plotting
+library(dplyr)     # data manipulation
+library(patchwork) # combining ggplot objects
+library(stargazer) # making nice regression output tables
 theme_set(theme_bw())
+
+# Directory string for outputs / inputs
 dir = paste0("/Users/tombearpark/Documents/princeton/1st_year", 
              "/ECO517/honore/assignments/pr2/")
 
@@ -14,13 +15,18 @@ dir = paste0("/Users/tombearpark/Documents/princeton/1st_year",
 # Question 1
 ######################################################## 
 
+
+######################################################## 
+# FUNCTIONS - for use multiple times throughout question
+
 # Load and clean data for plotting correlations 
 get_data = function(dir, name){
   df = fread(paste0(dir, name)) %>% 
     as.data.frame() %>% 
     rename(LNWAGE = V11, ED = V1) %>% 
     mutate(WAGE = exp(LNWAGE)) %>% 
-    rename(FE = V5, UNION = V10, HISP = V4, NONWH = V3, EX = V8, EXSQ = V9) %>% 
+    rename(FE = V5, UNION = V10, HISP = V4, 
+           NONWH = V3, EX = V8, EXSQ = V9) %>% 
     mutate(
       EX3 = EX^3, EX4 = EX^4, EX5 = EX^5
     ) %>% 
@@ -42,6 +48,7 @@ plot_correlations = function(df){
     ggtitle(paste0("Corr: ", corr_ln))
 }
 
+######################################################## 
 
 # Run question 1: find correlations
 df78 = get_data(dir = dir, name = "Cps78")
@@ -56,7 +63,8 @@ stargazer(lm78)
 
 # 4 - at what level of experience is wage maximised
 coefsm = coef(lm78)
-exper = function(x) coefsm["(Intercept)"] + coefsm["EX"]* x + coefsm["EXSQ"]* x ^2
+exper = function(x) coefsm["(Intercept)"] + 
+    coefsm["EX"]* x + coefsm["EXSQ"]* x ^2
 
 maxLNwage = as.numeric( -0.5 * (coefsm["EX"] / coefsm["EXSQ"]))
 
@@ -85,7 +93,6 @@ stargazer(lm78, lm78_ex)
 
 # 9
 summary(lm78_ex)
-
 
 # 10. 
 # Run restricted regression
