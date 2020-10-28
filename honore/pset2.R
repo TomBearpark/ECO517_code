@@ -5,6 +5,7 @@ library(ggplot2)   # plotting
 library(dplyr)     # data manipulation
 library(patchwork) # combining ggplot objects
 library(stargazer) # making nice regression output tables
+library(fread)     # fread function for easy data reading 
 theme_set(theme_bw())
 
 # Directory string for outputs / inputs
