@@ -122,7 +122,7 @@ lm85_ex = lm(data = df78,
              LNWAGE ~ FE + UNION + HISP + NONWH + 
                ED + EX + EXSQ + EX3 + EX4 + EX5)
 summary(lm85_ex)
-linearHypothesis(lm85_ex, c("EX3=0", "EX4=0", "EX5=0"))
+# linearHypothesis(lm85_ex, c("EX3=0", "EX4=0", "EX5=0"))
 
 
 # 12
@@ -133,7 +133,7 @@ lm_joint = lm(data = df_long,
               LNWAGE ~ 0+ FE + UNION + HISP + NONWH + ED + EX + EXSQ + 
                 year * (FE + UNION + HISP + NONWH + ED + EX + EXSQ ))
 
-linearHypothesis(lm_joint, c("FE:year=0", "UNION:year=0",   "HISP:year=0",  
+# linearHypothesis(lm_joint, c("FE:year=0", "UNION:year=0",   "HISP:year=0",  
                             "NONWH:year=0",  "ED:year=0",     "EX:year=0",
                             "EXSQ:year=0" ))
 # 13
