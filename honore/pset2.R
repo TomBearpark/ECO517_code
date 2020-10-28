@@ -3,12 +3,8 @@
 rm(list = ls())
 library(ggplot2)
 library(dplyr)
-library(data.table)
 library(patchwork)
 library(stargazer)
-library(car)
-library(tidyr)
-library(AER)
 
 
 theme_set(theme_bw())
@@ -16,7 +12,7 @@ dir = paste0("/Users/tombearpark/Documents/princeton/1st_year",
              "/ECO517/honore/assignments/pr2/")
 
 ######################################################## 
-# Functions for question 1
+# Question 1
 ######################################################## 
 
 # Load and clean data for plotting correlations 
@@ -93,24 +89,11 @@ summary(lm78_ex)
 
 
 # 10. 
-F_generate = function(lmR, lmU, N){
-  
-  R_R = deviance(lmR)
-  R_U = deviance(lmU)
-  
-  k = length(lmU$coefficients) 
-  q = length(lmU$coefficients)  - length(lmR$coefficients) 
-
-  F = (( R_R - R_U) / q ) / ((R_U) / (N - k))
-  
-  if(F<qf(0.95, q, N-k)) print("fail to reject") else print("reject")
-  
-  return(F)
-}
+# Run restricted regression
 lm78_noEX = lm(data = df78, 
-             LNWAGE ~ FE + UNION + HISP + NONWH + ED)
-F = F_generate(lm78_noEX, lm78_ex, length(df78))
-
+               LNWAGE ~ FE + UNION + HISP + NONWH + ED)
+# Calculate F-statistic
+anova(lm78_ex,lm78_noEX)  
 
 # 11. Re-run everything for 85 data
 df85= get_data(dir = dir, name = "Cps85")
