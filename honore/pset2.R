@@ -1,11 +1,10 @@
-# Pset 1 for Honore - Problem 5
+# Pset 1 for Honore - Problem set 2. Questions 1 and 2
 
 rm(list = ls())
 library(ggplot2)
 library(dplyr)
 library(patchwork)
 library(stargazer)
-
 
 theme_set(theme_bw())
 dir = paste0("/Users/tombearpark/Documents/princeton/1st_year", 
