@@ -156,18 +156,14 @@ df_long =  df_long %>%
   mutate(WAGE_inf = ifelse(year == 1, WAGE / 1.649, WAGE)) %>% 
   mutate(LNWAGE_inf = log(WAGE_inf))
 
-# 14
+# 14 Run a version just on 1985 data, to see what changes compared to before
 lm85_def = lm(data = df_long %>% filter(year == 1), 
               LNWAGE_inf ~ FE + UNION + HISP + NONWH + ED + EX + EXSQ)
 
 # 15 
 lm_const = lm(data = df_long , 
-              LNWAGE_inf ~ year +FE + UNION + HISP + NONWH + ED + EX + EXSQ)
+              LNWAGE_inf ~ year + FE + UNION + HISP + NONWH + ED + EX + EXSQ)
 summary(lm_const)
-
-
-stargazer(lm78, lm78_ex, lm85, lm85_ex)
-
 
 
 ######################################
