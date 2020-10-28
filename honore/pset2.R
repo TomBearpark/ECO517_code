@@ -139,19 +139,19 @@ anova(lm85_ex,lm85_noEX)
 
 #####
 
-# 12
+# 12- bind data
 df_long = bind_rows(df78 %>% mutate(year = 0), 
                     df85 %>% mutate(year = 1))
-
+# Run interacted regression
 lm_joint = lm(data = df_long, 
               LNWAGE ~ 0+ FE + UNION + HISP + NONWH + ED + EX + EXSQ + 
                 year * (FE + UNION + HISP + NONWH + ED + EX + EXSQ ))
+# test data
+linearHypothesis(lm_joint, c("FE:year=0", "UNION:year=0", "HISP:year=0",
+  "NONWH:year=0", "ED:year=0", "EX:year=0", "EXSQ:year=0"))
 
-linearHypothesis(lm_joint, c("FE:year=0", "UNION:year=0",   "HISP:year=0",
-  "NONWH:year=0",  "ED:year=0",     "EX:year=0",
-  "EXSQ:year=0" ))
 
-# 13
+ # 13
 df_long =  df_long %>% 
   mutate(WAGE_inf = ifelse(year == 1, WAGE / 1.649, WAGE)) %>% 
   mutate(LNWAGE_inf = log(WAGE_inf))
