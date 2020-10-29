@@ -5,8 +5,8 @@ library(ggplot2)   # plotting
 library(dplyr)     # data manipulation
 library(patchwork) # combining ggplot objects
 library(stargazer) # making nice regression output tables
-library(fread)     # fread function for easy data reading 
-library(cars)      # useful f-stat functions
+library(data.table)     # fread function for easy data reading 
+library(car)      # useful f-stat functions
 theme_set(theme_bw())
 
 # Directory string for outputs / inputs
@@ -166,6 +166,7 @@ lm_const = lm(data = df_long ,
 summary(lm_const)
 
 
+
 ######################################
 # Problem 2
 ######################################
@@ -173,3 +174,4 @@ summary(lm_const)
 x = rnorm(800)
 y = x^2
 summary(lm(y ~ x))
+

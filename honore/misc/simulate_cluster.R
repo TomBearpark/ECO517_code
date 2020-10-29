@@ -59,7 +59,7 @@ simmou = function(i){
   
 }
 df = lapply(
-  seq(1,100), simmou) %>% bind_rows()
+  seq(1,1000), simmou) %>% bind_rows()
 
 mean(df$p1)
 mean(df$p2)
