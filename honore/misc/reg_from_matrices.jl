@@ -3,7 +3,8 @@ using GLM, RDatasets, Statistics, LinearAlgebra
 iris
 
 # Regression to replicate... 
-lm(@formula(SepalLength ~ PetalLength + PetalWidth), iris)
+lm1 = lm(@formula(SepalLength ~ PetalLength + PetalWidth), iris)
+vcov(lm1)
 
 # Matrix version
 N = length(iris.SepalLength)
@@ -23,4 +24,5 @@ mean(e)
 std = sqrt(Diagonal(σ))
 
 # robust version... 
-σR = (X'X)^(-1) * (X'X*e'*e ) / (N-3)* (X'X)^(-1) 
+σR = (X'X)^(-1) * (X'*(e'*e)* X ) / (N-3)* (X'X)^(-1) 
+stdR = sqrt(Diagonal(σR))
