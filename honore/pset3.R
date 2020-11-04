@@ -1,11 +1,13 @@
 rm(list = ls())
 library(dplyr)
+library(tidyr)
 library(ggplot2)
 library(car)
 library(sandwich)
 library(purrr)
-
+theme_set(theme_bw())
 set.seed(1)
+out = "/Users/tombearpark/Documents/princeton/1st_year/ECO517/honore/assignments/pr3/"
 
 ##############################################
 # Problem 1
@@ -18,38 +20,41 @@ return_t_tests = function(i, N, beta, beta_null)
     mutate(epsilon = x * v) %>% 
     mutate(y = beta * x + epsilon)
   
-  lm1 = lm(y ~ x, data = df)
+  lm1 = lm(y ~ 0 + x, data = df)
   
-  linearHypothesis(lm1, c("x = 1"))
-  linearHypothesis(lm1, c("x = 1"), white.adjust = TRUE)
+  # using homoskedastic error assumption
+  d = linearHypothesis(lm1, c("x = 1"))
   
-  # Standard values
-  t = as.numeric((coef(lm1)["x"] - beta_null) / 
-                   coef(summary(lm1))[,"Std. Error"]["x"])
-  p = 2 * pt(abs(t), df = df.residual(lm1), lower.tail = FALSE)
+  # using robust vcv matrix
+  d1 = linearHypothesis(lm1, c("x = 1"), vcov=hccm(lm1, type = "hc0"))
   
-  # HAC SEs
-  robustSE <- sqrt(vcovHC(lm1, type = "HC1")[2,2])
-  tR  = (coef(lm1)["x"] - beta_null) / robustSE
-  pR = 2 * pt(abs(tR), df = df.residual(lm1), lower.tail = FALSE)
-  
-  return(data.frame(
-    t = t, p = p, sig = ifelse(p<0.05,1,0), 
-    tR = tR, pR = pR, sigR = ifelse(pR<0.05,1,0)))  
+  return(data.frame(p = d$`Pr(>F)`[2], pR = d1$`Pr(>F)`[2]))  
 }
 
-# Run 100000 times, check whether test is consistent 
+# Run 1000 times, check whether test is consistent 
 
 N = 200
 beta = 1
 beta_null = 1
 
 df = map_dfr(seq(1,1000), return_t_tests, 
-             N = N, beta = beta, beta_null = 1)
+             N = N, beta = beta, beta_null = 1) %>% 
+  mutate(sig = ifelse(p<0.05,1,0), 
+    sigR = ifelse(pR<0.05,1,0))
 
 # Check fraction of times 
 mean(df$sig)
 mean(df$sigR)
+
+plot_df = df %>% select(c("p", "pR")) %>% 
+  mutate(n = row_number()) %>% 
+  pivot_longer(cols = c("p", "pR"), names_to= "SE_type") %>% 
+  mutate(SE_type = ifelse(SE_type == "p", "homoskedastic", "robust"))
+
+ggplot(data = plot_df, aes(group = SE_type)) + 
+  geom_density(aes(x = value, fill = SE_type), alpha = 0.2) + 
+  ggtitle("P value density functions: 1000 reps") 
+ggsave(paste0(out, "pval_density.png"))
 
 
 ##############################################
@@ -57,22 +62,34 @@ mean(df$sigR)
 ##############################################
 
 df = data.frame(x = rnorm(100), 
-                epsilon = rnorm(100)) %>% 
-  mutate(y = 1+ x + epsilon)
+                epsilon = rnorm(100)) 
 
-lm(y ~ x, df)
-  
+prob_2_sim = function(j, df){
+  print(j)
+  if(j != 0) {
+    df$x[1] = j 
+  }
+  df = mutate(df, y = 1+ x + epsilon)
 
+  lm1 = lm(y ~ x, df)
 
-df = data.frame(x = 1:100000)
+  # using homoskedastic error assumption
+  d = linearHypothesis(lm1, c("x = 1"))$F[2]
+  # using robust vcv matrix
+  d1 = linearHypothesis(lm1, c("x = 1"), vcov=hccm(lm1, type = "hc0"))$F[2]
   
-microbenchmark("piping" = { df %>% mutate(y = x + 1)},
-               "pure" = {mutate(df, y = x + 1)},
-               "base" = {})
-  
-  
-  
-  
+  return(data.frame(j = j, Homoskedastic = d, Robust = d1))
+}
+
+res = map_dfr(c(0, 1, 10, 100, 1000, 10000), prob_2_sim, df = df) %>% 
+  pivot_longer(cols = c("Homoskedastic", "Robust")) %>% 
+  mutate(t = sqrt(value))
+
+ggplot(res) + 
+  geom_point(aes(x = j, y = t, color = name)) +
+  geom_line(aes(x = j, y = t, color = name), alpha = 0.5)
+ggsave(paste0(out, "t_stat_as_changes.png"))
+
   
 
 
