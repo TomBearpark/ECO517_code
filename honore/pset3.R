@@ -76,9 +76,11 @@ prob_2_sim = function(j, df){
   # using homoskedastic error assumption
   d = linearHypothesis(lm1, c("x = 1"))$F[2]
   # using robust vcv matrix
-  d1 = linearHypothesis(lm1, c("x = 1"), vcov=hccm(lm1, type = "hc0"))$F[2]
+  d1 = linearHypothesis(lm1, c("x = 1"), 
+                        vcov=hccm(lm1, type = "hc0"))$F[2]
   
-  return(data.frame(j = j, Homoskedastic = d, Robust = d1))
+  return(data.frame(j = j, 
+                    Homoskedastic = d, Robust = d1))
 }
 
 res = map_dfr(c(0, 1, 10, 100, 1000, 10000), prob_2_sim, df = df) %>% 
