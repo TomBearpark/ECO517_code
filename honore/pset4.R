@@ -38,17 +38,17 @@ return_coef = function(j, N, d0, d1, a1, a2, q)
   return(data.frame(coef = iv_c, ols = ols, j = j, N = N))
 }
 # Function for running IV on 500 datasets, for 3 different N
-run_loops = function(N1, N2, N3, q, a = 1)
+run_loops = function(N1, N2, N3, q, a1 = 1, a2 = 1)
 {
   return(
     map_dfr(seq(1,500), return_coef, 
-          N = N1, d0 = 1, d1 = 1, a1 = a, a2 = a, q = q) %>% 
+          N = N1, d0 = 1, d1 = 1, a1 = a1, a2 = a2, q = q) %>% 
     bind_rows(
       map_dfr(seq(1,500), return_coef, 
-              N = N2, d0 = 1, d1 = a, a1 = a, a2 = 1, q = q)) %>% 
+          N = N2, d0 = 1, d1 = 1, a1 = a1, a2 = a2, q = q)) %>% 
     bind_rows(
       map_dfr(seq(1,500), return_coef, 
-              N = N3, d0 = 1, d1 = a, a1 = a, a2 = 1, q = q))
+          N = N3, d0 = 1, d1 = 1, a1 = a1, a2 = a2, q = q))
   )
 }
 # Returns and saves a latex table of summary stats
@@ -77,10 +77,10 @@ p1 = ggplot(data = df1, aes(group = N)) +
   geom_vline(xintercept = 1,color = "red", alpha = 0.5)  + 
   ggtitle("Model working well")
 p1
-ggsave(p1, file= paste0(out, "q3_p1.png"))
+ggsave(p1, file= paste0(out, "q3_p1.png"), height = 7, width = 10)
 
 # output means / sd / etc
-return_table(df, out, 1)
+return_table(df1, out, 1)
 
 ####################################################
 # Question 2
@@ -97,7 +97,7 @@ p2 = ggplot(data = df2, aes(group = N)) +
   geom_vline(xintercept = 1,color = "red", alpha = 0.5) + 
   ggtitle("Many instruments")
 
-ggsave(p2, file= paste0(out, "q3_p2.png"))
+ggsave(p2, file= paste0(out, "q3_p2.png"), height = 7, width = 10)
 p2
 # output means / sd / etc
 return_table(df2, out, 2)
@@ -107,7 +107,7 @@ return_table(df2, out, 2)
 ####################################################
 
 # Generate IV estimates for each of 500 datasets
-df3 = run_loops(20, 200, 2000, 2, a = 0.01)
+df3 = run_loops(20, 200, 2000, 2, a1 = 0.01)
 
 # Show comparison to naive ols estimator... 
 p3 = ggplot(data = df3, aes(group = N)) + 
@@ -117,7 +117,8 @@ p3 = ggplot(data = df3, aes(group = N)) +
   geom_vline(xintercept = 1,color = "red", alpha = 0.5)  + 
   ggtitle("Weak instruments")
 p3
-ggsave(p3, file= paste0(out, "q3_p3.png"))
+ggsave(p3, file= paste0(out, "q3_p3.png"), height = 7, width = 10)
 
 # output means / sd / etc
 return_table(df3, out, 3)
+
