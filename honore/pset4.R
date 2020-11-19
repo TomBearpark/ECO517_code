@@ -76,10 +76,12 @@ run_loops = function(N1, N2, N3, q, a1 = 1, a2 = 1)
 return_table = function(df, out, part) 
 {
   out1 = df %>% group_by(N, estimator) %>% 
-    summarise(mean = mean(value), median = median(value), 
-              sd = sd(value), iqr = IQR(value)) %>% 
+    summarise(Mean = mean(value), Median = median(value), 
+              S.D. = sd(value), IQR = IQR(value)) %>% 
     group_by(estimator) %>% 
-    arrange(N, .by_group = TRUE)
+    arrange(N, .by_group = TRUE) %>% 
+    mutate(N = round(N)) %>% as.data.frame() %>% 
+    mutate(estimator =toupper(estimator))
   
   print(xtable(out1, type = "latex"), 
         file = paste0(out, "PART2_p", part,".tex"))
@@ -123,7 +125,7 @@ plot_df2 = df2 %>%
   pivot_longer(cols = c("iv", "ols", "liml"), names_to = "estimator")
 
 # Show comparison to naive ols estimator... 
-p2 = ggplot(data = plot_df2) + 
+p2 = ggplot(data = plot_df2 %>% filter(estimator != "ols")) + 
   geom_density(aes(x = value, color = estimator)) +  
   facet_wrap(~N, scales = "free") + 
   geom_vline(xintercept = 1,color = "red", alpha = 0.5) + 
@@ -139,12 +141,12 @@ return_table(plot_df2, out, 2)
 ####################################################
 
 # Generate IV estimates for each of 500 datasets
-df3 = run_loops(20, 200, 2000, 1, a1 = 0.01, a2 = 0.01)
+df3 = run_loops(20, 200, 2000, 1, a1 = 0.1, a2 = 0.1)
 plot_df3 = df3 %>% 
   pivot_longer(cols = c("iv", "ols", "liml"), names_to = "estimator")
 
 # Show comparison to naive ols estimator... 
-p3 = ggplot(data = plot_df3) + 
+p3 = ggplot(data = plot_df3%>% filter(estimator != "ols")) + 
   geom_density(aes(x = value, color = estimator)) + 
   facet_wrap(~N, scales = "free") + 
   geom_vline(xintercept = 1,color = "red", alpha = 0.5)  + 
