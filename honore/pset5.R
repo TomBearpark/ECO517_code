@@ -53,8 +53,12 @@ for (m in 1:M) {
 
 # Optimise the moment condition
 
-moment_condition = function(df, d0, d1, b, m)
+moment_condition = function(df, par, m)
 {
+  d0 = par[1]
+  d1 = par[2]
+  b = c(par[3], par[4], par[5])
+  
   y   = df[paste0("y_m", m)]
   z   = df[paste0("z_m", m)]
   x1  = df[paste0("x1_m", m)]
@@ -77,9 +81,9 @@ moment_condition = function(df, d0, d1, b, m)
   return(f)
 }
 # Next step - run optimization function on this to minimize empirical moments
-empirical_moments = moment_condition(df, 1, 1, c(1,1,1), 1)
-
-
+result = optim(
+  par = c(0,0,0,0,0), fn =moment_condition,  df = df, m = 1
+)
 
 
 
