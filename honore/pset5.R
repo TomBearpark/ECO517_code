@@ -3,6 +3,7 @@
 rm(list = ls())
 library(tidyverse)
 library(ggplot2)
+# library(gmm)- this doesn't work for some reason
 
 # Data set properties 
 M = 3
@@ -16,17 +17,16 @@ a2 = c(1,1,1)
 b = c(0,0,0)
 a3 = c(0,0,0)
 
-
 # Generate dataset
 
 # Variables common across equations 
 df = data.frame(
-  u1 = rnorm(n), 
-  u2 = rnorm(n),
-  w1 = rnorm(n), 
-  x3_1 = runif(n, 0,3),
-  x3_2 = runif(n, 0,3),
-  x3_3 = runif(n, 0,3))
+                u1 = rnorm(n), 
+                u2 = rnorm(n),
+                w1 = rnorm(n), 
+                x3_1 = runif(n, 0,3),
+                x3_2 = runif(n, 0,3),
+                x3_3 = runif(n, 0,3))
 
 # Variables that are specific to each equation, m
 for (m in 1:M) {
@@ -51,7 +51,34 @@ for (m in 1:M) {
     df[paste0("v1_m",m)] + df[paste0("v2_m",m)] + df["u1"]
 }
 
-head(df)
+# Optimise the moment condition
+
+moment_condition = function(df, d0, d1, b, m)
+{
+  y   = df[paste0("y_m", m)]
+  z   = df[paste0("z_m", m)]
+  x1  = df[paste0("x1_m", m)]
+  x2  = df[paste0("x2_m", m)]
+  x31 = df[paste0("x3_1")]
+  x32 = df[paste0("x3_2")]
+  x33 = df[paste0("x3_3")]
+  
+  m1 <-  y - (d0 + z * d1 + x31* b[1] + x32 * b[2] + x33 * b[3])
+  m2 <- (y - (d0 + z * d1 + x31* b[1] + x32 * b[2] + x33 * b[3])) * x1
+  m3 <- (y - (d0 + z * d1 + x31* b[1] + x32 * b[2] + x33 * b[3])) * x2
+  m4 <- (y - (d0 + z * d1 + x31* b[1] + x32 * b[2] + x33 * b[3])) * x31
+  m5 <- (y - (d0 + z * d1 + x31* b[1] + x32 * b[2] + x33 * b[3])) * x32
+  m6 <- (y - (d0 + z * d1 + x31* b[1] + x32 * b[2] + x33 * b[3])) * x33
+  # browser
+  
+  f =  data.frame(m1 = mean(m1[[1]]), m2 = mean(m2[[1]]), m3 = mean(m3[[1]]), 
+                  m4 = mean(m4[[1]]), m5 = mean(m5[[1]]), m6 = mean(m6[[1]])) 
+    
+  return(f)
+}
+# Next step - run optimization function on this to minimize empirical moments
+empirical_moments = moment_condition(df, 1, 1, c(1,1,1), 1)
+
 
 
 
