@@ -1,5 +1,5 @@
 # Part 2, Bo Honore Metric Pset 5, GMM estimations
-# Annoyingly, had to do this in two parts, this part generates the results.
+# Had to do this in two parts, this part generates the results.
 # Separate script for plotting locally using ggplot2 (see pset5_plots.R)
 
 
@@ -120,9 +120,21 @@ run_single_and_joint = function(M, n, i){
   res_mult$i= i
   return(res_mult)
 }
-# 
+# Problem 4
 df = run_single_and_joint(M = 3, n = 1000, i = 1)
-write.csv()
+write.csv(df, '/u/bearpark/MACOSXFILES/q1.csv')
+
+# Problem 5
+df2 = mclapply(seq(1,500), run_single_and_joint, 
+    M = 3, n = 1000, mc.cores = 50)
+res_df2 = do.call(rbind.data.frame, df2)
+write.csv(res_df2, '/u/bearpark/MACOSXFILES/q2.csv')
+
+# Problem 6
+df3 = mclapply(seq(1,500), run_single_and_joint, 
+    M = 25, n = 1000, mc.cores = 50)
+res_df3 = do.call(rbind.data.frame, df3)
+write.csv(res_df3, '/u/bearpark/MACOSXFILES/q3.csv')
 
 
 
