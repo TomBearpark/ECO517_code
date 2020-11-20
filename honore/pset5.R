@@ -9,7 +9,6 @@ library(parallel) # to parallelise loops, otherwise very long computation time
 
 set.seed(1)
 
-# Function to return a dataframe for given n amd M
 gen_data = function(M, n){
   # Set parameters
   d0 = rep(1, M)
@@ -53,57 +52,25 @@ gen_data = function(M, n){
   df$M = M
   return(df)
 }
-# Function for moment condition - very explicit version to make sure I know
-# whats going on. Later function will be more general
 
-moment_condition = function(par, df)
-{
-  m = df[1,8]
-  d0 = par[1]
-  d1 = par[2]
-  b = c(par[3], par[4], par[5])
+single_moment_condition = function(par, df){
+  m = df$m[1]
+  mat= as.matrix(df)
+  colnames(mat) <- names(df)
+
+  vars = mat[,paste0("y_m", m)] - (par[1] + mat[,paste0("z_m", m)] * par[2] + 
+            mat[,paste0("x3_1")] * par[3] + mat[,paste0("x3_2")] * par[4] + 
+            mat[,paste0("x3_3")] * par[5])
+  f = c( 
+        vars, 
+        vars * mat[,paste0("x1_m", m)], 
+        vars * mat[,paste0("x2_m", m)], 
+        vars * mat[,paste0("x3_1")], 
+        vars * mat[,paste0("x3_2")], 
+        vars * mat[,paste0("x3_3")])
   
-  print("dim X")
-  print(dim(df))
-  y   = df[,1]
-  z   = df[,2]
-  x1  = df[,3]
-  x2  = df[,4]
-  x31 = df[,5]
-  x32 = df[,6]
-  x33 = df[,7]
-  
-  m1 <-  y - (d0 + z * d1 + x31* b[1] + x32 * b[2] + x33 * b[3])
-  m2 <- (y - (d0 + z * d1 + x31* b[1] + x32 * b[2] + x33 * b[3])) * x1
-  m3 <- (y - (d0 + z * d1 + x31* b[1] + x32 * b[2] + x33 * b[3])) * x2
-  m4 <- (y - (d0 + z * d1 + x31* b[1] + x32 * b[2] + x33 * b[3])) * x31
-  m5 <- (y - (d0 + z * d1 + x31* b[1] + x32 * b[2] + x33 * b[3])) * x32
-  m6 <- (y - (d0 + z * d1 + x31* b[1] + x32 * b[2] + x33 * b[3])) * x33
-  
-  f = cbind(m1, m2, m3, m4, m5, m6) 
   return(f)
 }
-
-# Wrapper function to return relevant dataframe
-run_single_eqn = function(m, df){
-  df1 = df 
-  df1$m = m
-  mat = as.matrix(df1[c(paste0("y_m", m), paste0("z_m", m), 
-          paste0("x1_m", m), paste0("x2_m", m), paste0("x3_1"), 
-          paste0("x3_2"), paste0("x3_3"),"m")])
-  coefs = coef(gmm(moment_condition, mat, c(1,1,1,1,1)))
-
-  return(data.frame(m = m, d0 = coefs[1], d1 = coefs[2], 
-    b1 = coefs[3], b2 = coefs[4], b3 = coefs[5]))
-}
-
-# Run and produce output csv
-df = gen_data(M = 3, n = 1000)
-res = lapply(seq(1,3), run_single_eqn, df = df)
-res_df = do.call(rbind.data.frame, res)
-write.csv(res_df, '/u/bearpark/MACOSXFILES/single_eqn_res_M3.csv')
-
-# Multiple equation version
 
 joint_moment_condition = function(par, df){
   M = df$M[1]
@@ -124,67 +91,39 @@ joint_moment_condition = function(par, df){
   }
   return(f)
 }
-# Wrapper function to run and format outputs
-return_format_joint_df = function(M, df){
+
+run_single_and_joint = function(M, n, i){
 
   par = rep(c(1,1,0,0,0), M)
-  res_mult = coef(gmm(joint_moment_condition, df, par))
+  df = gen_data(M = M, n = n)
   
-  names_mult = c()
+  res_mult = data.frame(coef = coef(gmm(joint_moment_condition, df, par)))
+  res_mult$estimate = c("d0", "d1", "b1", "b2", "b3")
+  res_mult$type = "joint"
+  res_mult$m = rep(1:M, each=5)
+  
+  par = c(1,1,0,0,0)
   for (m in 1:M){
     print(m)
-    names_mult = c(names_mult, paste0("d0_m", m), paste0("d1_m", m), paste0("b1_m", m),
-      paste0("b2_m", m), paste0("b3_m", m))
+    mat = df[c(paste0("y_m", m), paste0("z_m", m), 
+            paste0("x1_m", m), paste0("x2_m", m), paste0("x3_1"), 
+            paste0("x3_2"), paste0("x3_3"))]
+    mat$m = m
+    print("made data")
+    res_single = data.frame(coef = coef(gmm(single_moment_condition, mat, par)))
+    print("got coefs")
+    res_single$m = m
+    res_single$estimate = c("d0", "d1", "b1", "b2", "b3")
+    res_single$type = "single"
+    res_mult = rbind.data.frame(res_mult, res_single)
   }
-  res_mult_df = data.frame(res_mult)
-  res_mult_df$param = names_mult
-  return(res_mult_df)
+  res_mult$i= i
+  return(res_mult)
 }
-df = gen_data(M = 3, n = 1000)
-res_df_joint = return_format_joint_df(3, df)
-write.csv(res_df_joint, '/u/bearpark/MACOSXFILES/joint_res_M3.csv')
+# 
+df = run_single_and_joint(M = 3, n = 1000, i = 1)
+write.csv()
 
-# Part 2
-# Run function 500 times
-# single equation version
-
-run_single_wrapper = function(i, M = 3){
-  print(i)
-  df = gen_data(M = M, n = 1000)
-  res = lapply(seq(1,M), run_single_eqn, df = df)
-  res_df = do.call(rbind.data.frame, res)
-  res_df$i = i
-  return(res_df)
-}
-df2_1 = mclapply(seq(1,500), run_single_wrapper, mc.cores = 40)
-res_df2_1 = do.call(rbind.data.frame, df2_1)
-write.csv(res_df2_1, '/u/bearpark/MACOSXFILES/p2_500_iter_single_eqn_res_M3.csv')
-
-# Multiple equatoin version 500 times
-run_multiple_wrapper = function(i, M = 3){
-  print(i)
-  df = gen_data(M = M, n = 1000)
-  res_df = return_format_joint_df(M = M, df)
-  res_df$i = i
-  return(res_df)
-}
-
-df2_2 = mclapply(seq(1,500), run_multiple_wrapper, mc.cores = 40)
-res_df2_2 = do.call(rbind.data.frame, df2_2)
-write.csv(res_df2_2, '/u/bearpark/MACOSXFILES/p2_500_iter_joint_res_M3.csv')
-
-# Part 3
-# Run function 500 times
-# single equation version
-
-df2_3_1 = mclapply(seq(1,500), run_single_wrapper, M = 25, mc.cores = 40)
-res_df2_3_1 = do.call(rbind.data.frame, df2_3_1)
-write.csv(res_df2_3_1, '/u/bearpark/MACOSXFILES/p2_500_iter_single_eqn_res_M25.csv')
-
-# Joint equation version
-df2_3_2 = mclapply(seq(1,500), run_multiple_wrapper, M = 25, mc.cores = 40)
-res_df2_3_2 = do.call(rbind.data.frame, df2_3_2)
-write.csv(res_df2_3_2, '/u/bearpark/MACOSXFILES/p2_500_iter_joint_res_M25.csv')
 
 
 
