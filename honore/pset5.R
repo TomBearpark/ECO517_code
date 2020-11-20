@@ -95,7 +95,7 @@ run_single_eqn = function(m, df){
 
   return(data.frame(m = m, d0 = coefs[1], d1 = coefs[2], 
     b1 = coefs[3], b2 = coefs[4], b3 = coefs[5]))
-1}
+}
 
 # Run and produce output csv
 df = gen_data(M = 3, n = 1000)
@@ -104,7 +104,8 @@ res_df = do.call(rbind.data.frame, res)
 write.csv(res_df, '/u/bearpark/MACOSXFILES/single_eqn_res_M3.csv')
 
 # Multiple equation version
-run_multiple = function(par, df){
+
+joint_moment_condition = function(par, df){
   M = df$M[1]
   mat= as.matrix(df)
   colnames(mat) <- names(df)
@@ -127,7 +128,7 @@ run_multiple = function(par, df){
 return_format_joint_df = function(M, df){
 
   par = rep(c(1,1,0,0,0), M)
-  res_mult = coef(gmm(run_multiple, df, par))
+  res_mult = coef(gmm(joint_moment_condition, df, par))
   
   names_mult = c()
   for (m in 1:M){
