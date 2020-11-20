@@ -160,10 +160,10 @@ res_df2_1 = do.call(rbind.data.frame, df2_1)
 write.csv(res_df2_1, '/u/bearpark/MACOSXFILES/p2_500_iter_single_eqn_res_M3.csv')
 
 # Multiple equatoin version 500 times
-run_multiple_wrapper = function(i){
+run_multiple_wrapper = function(i, M = 3){
   print(i)
-  df = gen_data(M = 3, n = 1000)
-  res_df = return_format_joint_df(M = 3, df)
+  df = gen_data(M = M, n = 1000)
+  res_df = return_format_joint_df(M = M, df)
   res_df$i = i
   return(res_df)
 }
@@ -178,12 +178,12 @@ write.csv(res_df2_2, '/u/bearpark/MACOSXFILES/p2_500_iter_joint_res_M3.csv')
 
 df2_3_1 = mclapply(seq(1,500), run_single_wrapper, M = 25, mc.cores = 40)
 res_df2_3_1 = do.call(rbind.data.frame, df2_3_1)
-write.csv(res_df2_3_1, '/u/bearpark/MACOSXFILES/p2_500_iter_single_eqn_res_M3.csv')
+write.csv(res_df2_3_1, '/u/bearpark/MACOSXFILES/p2_500_iter_single_eqn_res_M25.csv')
 
 # Joint equation version
 df2_3_2 = mclapply(seq(1,500), run_multiple_wrapper, M = 25, mc.cores = 40)
 res_df2_3_2 = do.call(rbind.data.frame, df2_3_2)
-write.csv(res_df2_3_2, '/u/bearpark/MACOSXFILES/p2_500_iter_joint_res_M3.csv')
+write.csv(res_df2_3_2, '/u/bearpark/MACOSXFILES/p2_500_iter_joint_res_M25.csv')
 
 
 
