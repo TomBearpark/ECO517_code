@@ -5,22 +5,29 @@ library(patchwork)
 path = paste0("/Users/tombearpark/Documents/princeton/1st_year/",
               "ECO517/honore/assignments/pr5/")
 
-# Check 
-df = read_csv(paste0(path, "p2_500_iter_single_eqn_res_M3.csv"))
+# Check Quesiton 1 table
+df = read_csv(paste0(path, "q1.csv"))
 
-p = ggplot(data = df %>% filter(m == 1)) + 
-  geom_density(aes(x = d0)) + ggtitle("Single Equation")
-p
+# Check Q 2 means
 
-col = df %>% filter(m == 1)
-mean(col$d0)
+df = read_csv(paste0(path, "q2.csv"))
 
-df_joint = read_csv(paste0(path, "p2_500_iter_joint_res_M3.csv"))
-q = ggplot(data = df_joint %>% filter(param == "d0_m1")) + 
-  geom_density(aes(x = res_mult)) + ggtitle("Joint")
-q
+df %>% 
+  ggplot() + 
+  geom_density(aes(x = coef, color = type)) + 
+  ggtitle("Coefficients, M = 3, n = 1000") + 
+  facet_wrap(vars(m, estimate), ncol = 5)
 
-col1 = df_joint %>% filter(m == 1, param == "d0_m1")
-mean(col1$res_mult)
+df2 = read_csv(paste0(path, "q3.csv")) 
+df2 %>% filter(estimate == "b2")%>%
+  ggplot() + 
+  geom_density(aes(x = coef, color = type)) + 
+  ggtitle("Coefficients, M = 25, n = 1000") + 
+  facet_wrap(vars(m))
 
-(p + q) 
+df3 = read_csv(paste0(path, "q3_n250_M25.csv")) 
+df3 %>% filter(estimate == "d0", m == 3)%>%
+  ggplot() + 
+  geom_density(aes(x = coef, color = type)) + 
+  ggtitle("Coefficients, M = 25, n = 250") + 
+  facet_wrap(vars(m))

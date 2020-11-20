@@ -54,7 +54,7 @@ gen_data = function(M, n){
 }
 
 single_moment_condition = function(par, df){
-  m = df$m[1]
+  m = df$M[1]
   mat= as.matrix(df)
   colnames(mat) <- names(df)
 
@@ -93,7 +93,7 @@ joint_moment_condition = function(par, df){
 }
 
 run_single_and_joint = function(M, n, i){
-
+  # parameter vector for joint
   par = rep(c(1,1,0,0,0), M)
   df = gen_data(M = M, n = n)
   
@@ -102,13 +102,14 @@ run_single_and_joint = function(M, n, i){
   res_mult$type = "joint"
   res_mult$m = rep(1:M, each=5)
   
+  # Parameter vector per equation`
   par = c(1,1,0,0,0)
   for (m in 1:M){
     print(m)
     mat = df[c(paste0("y_m", m), paste0("z_m", m), 
             paste0("x1_m", m), paste0("x2_m", m), paste0("x3_1"), 
             paste0("x3_2"), paste0("x3_3"))]
-    mat$m = m
+    mat$M = m
     print("made data")
     res_single = data.frame(coef = coef(gmm(single_moment_condition, mat, par)))
     print("got coefs")
@@ -135,6 +136,17 @@ df3 = mclapply(seq(1,500), run_single_and_joint,
     M = 25, n = 1000, mc.cores = 50)
 res_df3 = do.call(rbind.data.frame, df3)
 write.csv(res_df3, '/u/bearpark/MACOSXFILES/q3.csv')
+
+df4 = mclapply(seq(1,500), run_single_and_joint, 
+    M = 25, n = 250, mc.cores = 50)
+res_df4 = do.call(rbind.data.frame, df4)
+write.csv(res_df4, '/u/bearpark/MACOSXFILES/q3_n250_M25.csv')
+
+
+
+
+
+
 
 
 
