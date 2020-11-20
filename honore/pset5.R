@@ -4,8 +4,8 @@
 
 
 rm(list = ls())
-library(gmm) #- only works on the server for me :(
-library(parallel) # loops take ages otherwise 
+library(gmm) #- only works on the server for me - fortran compiler on laptop broken it seems
+library(parallel) # to parallelise loops, otherwise very long computation time
 
 set.seed(1)
 
